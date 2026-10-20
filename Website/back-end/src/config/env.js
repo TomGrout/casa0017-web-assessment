@@ -1,6 +1,9 @@
+import path from 'node:path';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({
+  path: path.resolve(import.meta.dirname, '../../.env')
+});
 
 const REQUIRED_ENV_VARS = ['DB_HOST', 'DB_USER', 'DB_NAME'];
 
@@ -15,7 +18,14 @@ const config = Object.freeze({
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME,
     connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10
-  }
+  },
+  apis: {
+    thamesWaterBaseUrl:
+      process.env.THAMES_WATER_BASE_URL || 'https://api.thameswater.co.uk/opendata/v2',
+    eaFloodBaseUrl:
+      process.env.EA_FLOOD_BASE_URL || 'https://environment.data.gov.uk/flood-monitoring',
+    timeoutMs: Number(process.env.API_TIMEOUT_MS) || 8000
+  },
 });
 
 export default config;
