@@ -1,13 +1,30 @@
 import mysql from 'mysql2/promise';
 import config from './env.js';
 
-// TODO: Create MySQL connection pool with config
+const pool = mysql.createPool({
+  host: config.db.host,
+  port: config.db.port,
+  user: config.db.user,
+  password: config.db.password,
+  database: config.db.database,
+  waitForConnections: true,
+  connectionLimit: config.db.connectionLimit,
+  queueLimit: 0,
+  timezone: 'Z',
+  decimalNumbers: true
+});
 
-const pool = null; // TODO: initialize pool
-
-// TODO: Test database connection
 async function testConnection() {
-  // TODO: implement connection test
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.ping();
+    return true;
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
 }
 
 export { pool, testConnection };
