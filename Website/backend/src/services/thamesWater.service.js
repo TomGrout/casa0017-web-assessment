@@ -1,6 +1,6 @@
 import axios from 'axios';
 import config from '../config/env.js';
-import { pool } from '../db/db.js';
+import { pool } from '../config/db.js';
 
 const client = axios.create({
   baseURL: config.apis.thamesWaterBaseUrl,

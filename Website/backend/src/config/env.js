@@ -26,6 +26,10 @@ const config = Object.freeze({
       process.env.EA_FLOOD_BASE_URL || 'https://environment.data.gov.uk/flood-monitoring',
     timeoutMs: Number(process.env.API_TIMEOUT_MS) || 8000
   },
+  cron: {
+    enabled: process.env.CRON_ENABLED !== 'false',
+    schedule: process.env.CRON_SCHEDULE || '*/15 * * * *'
+  },
 });
 
 export default config;
