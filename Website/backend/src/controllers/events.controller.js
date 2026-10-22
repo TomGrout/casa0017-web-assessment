@@ -1,19 +1,11 @@
-// TODO: Import services
+import { getSpillEvents } from '../services/events.service.js';
 
-export const getAllEvents = async (req, res, next) => {
-  // TODO: Extract query parameters (startDate, endDate, limit)
-  // TODO: Fetch events from service
-  // TODO: Return JSON response
-};
-
-export const getActiveEvents = async (req, res, next) => {
-  // TODO: Fetch active events from service
-  // TODO: Return JSON response
-};
-
-export const getEventsByOutfall = async (req, res, next) => {
-  // TODO: Extract outfallId from params
-  // TODO: Extract limit from query
-  // TODO: Fetch events by outfall from service
-  // TODO: Return JSON response
-};
+export async function listEvents(req, res, next) {
+  try {
+    const { outfall, limit } = req.query;
+    const data = await getSpillEvents({ permitNumber: outfall, limit: limit || 500 });
+    res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    next(error);
+  }
+}

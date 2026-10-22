@@ -1,10 +1,8 @@
-import express from 'express';
-// TODO: Import controllers
+import { Router } from 'express';
+import { listEvents } from '../controllers/events.controller.js';
 
-const router = express.Router();
+const router = Router();
 
-// TODO: GET /api/events - Get all events (with optional filters)
-// TODO: GET /api/events/active - Get currently active discharge events
-// TODO: GET /api/events/outfall/:outfallId - Get events for specific outfall
+router.get('/', listEvents);
 
 export default router;

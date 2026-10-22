@@ -1,9 +1,8 @@
-import express from 'express';
-// TODO: Import controllers
+import { Router } from 'express';
+import { listThresholds } from '../controllers/thresholds.controller.js';
 
-const router = express.Router();
+const router = Router();
 
-// TODO: GET /api/thresholds - Get rainfall threshold analysis data
-// TODO: GET /api/thresholds/scatter - Get scatter plot data (rainfall vs tide)
+router.get('/', listThresholds);
 
 export default router;

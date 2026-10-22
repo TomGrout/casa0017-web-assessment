@@ -30,6 +30,10 @@ const config = Object.freeze({
     enabled: process.env.CRON_ENABLED !== 'false',
     schedule: process.env.CRON_SCHEDULE || '*/15 * * * *'
   },
+  cors: {
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    credentials: true
+  }
 });
 
 export default config;
