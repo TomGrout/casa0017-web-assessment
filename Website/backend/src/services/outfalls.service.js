@@ -1,17 +1,57 @@
-// TODO: Import database queries
-// TODO: Import utils (haversine)
+import { pool } from '../config/db.js';
+import { fetchDischargeStatus } from './thamesWater.service.js';
 
-export const fetchAllOutfalls = async () => {
-  // TODO: Query database for all outfalls
-};
+export async function getAllOutfalls(river = null) {
+  const params = [];
+  let whereSql = '';
 
-export const fetchOutfallById = async (id) => {
-  // TODO: Query database for outfall by id
-};
+  if (river) {
+    whereSql = 'WHERE o.receiving_watercourse LIKE ?';
+    params.push(`%${river}%`);
+  }
 
-export const fetchNearbyOutfalls = async (lat, lng, radiusKm) => {
-  // TODO: Get all outfalls
-  // TODO: Calculate distance using Haversine
-  // TODO: Filter by radius
-  // TODO: Sort by distance
-};
+  const [rows] = await pool.query(
+    `SELECT
+       o.permit_number AS permitNumber,
+       o.location_name AS locationName,
+       o.receiving_watercourse AS receivingWaterCourse,
+       o.easting,
+       o.northing,
+       o.lat,
+       o.lng,
+       o.is_discharging AS isDischarging,
+       o.most_recent_start AS mostRecentStart,
+       o.most_recent_stop AS mostRecentStop,
+       og.gauge_id AS pairedGaugeId,
+       og.distance_km AS gaugeDistanceKm
+     FROM outfalls o
+     LEFT JOIN outfall_gauge og ON o.permit_number = og.outfall_id
+     ${whereSql}
+     ORDER BY o.location_name ASC`,
+    params
+  );
+
+  if (rows.length === 0) {
+    const live = await fetchDischargeStatus();
+    return live.items || [];
+  }
+
+  return rows;
+}
+
+export async function getOutfallByPermit(permitNumber) {
+  const [rows] = await pool.query(
+    `SELECT
+       permit_number AS permitNumber,
+       location_name AS locationName,
+       receiving_watercourse AS receivingWaterCourse,
+       easting, northing, lat, lng,
+       is_discharging AS isDischarging,
+       most_recent_start AS mostRecentStart,
+       most_recent_stop AS mostRecentStop
+     FROM outfalls
+     WHERE permit_number = ?`,
+    [permitNumber]
+  );
+  return rows[0] || null;
+}

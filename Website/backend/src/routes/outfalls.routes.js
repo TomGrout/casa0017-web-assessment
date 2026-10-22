@@ -1,10 +1,9 @@
-import express from 'express';
-// TODO: Import controllers
+import { Router } from 'express';
+import { listOutfalls, getSingleOutfall } from '../controllers/outfalls.controller.js';
 
-const router = express.Router();
+const router = Router();
 
-// TODO: GET /api/outfalls - Get all outfalls
-// TODO: GET /api/outfalls/nearby?lat=x&lng=y&radius=z - Get nearby outfalls
-// TODO: GET /api/outfalls/:id - Get specific outfall by ID
+router.get('/', listOutfalls);
+router.get('/:id', getSingleOutfall);
 
 export default router;

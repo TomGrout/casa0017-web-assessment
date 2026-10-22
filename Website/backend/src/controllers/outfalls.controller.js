@@ -1,20 +1,23 @@
-// TODO: Import services
+import { getAllOutfalls, getOutfallByPermit } from '../services/outfalls.service.js';
 
-export const getAllOutfalls = async (req, res, next) => {
-  // TODO: Fetch all outfalls from service
-  // TODO: Return JSON response with success, count, and data
-};
+export async function listOutfalls(req, res, next) {
+  try {
+    const { river } = req.query;
+    const data = await getAllOutfalls(river);
+    res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    next(error);
+  }
+}
 
-export const getOutfallById = async (req, res, next) => {
-  // TODO: Extract id from params
-  // TODO: Fetch outfall by id from service
-  // TODO: Return 404 if not found
-  // TODO: Return JSON response with outfall data
-};
-
-export const getNearbyOutfalls = async (req, res, next) => {
-  // TODO: Extract lat, lng, radius from query params
-  // TODO: Validate required parameters
-  // TODO: Fetch nearby outfalls from service
-  // TODO: Return JSON response with outfalls
-};
+export async function getSingleOutfall(req, res, next) {
+  try {
+    const data = await getOutfallByPermit(req.params.id);
+    if (!data) {
+      return res.status(404).json({ success: false, error: 'Outfall not found' });
+    }
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+}
