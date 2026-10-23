@@ -10,7 +10,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./back-end/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./backend/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pcasa0017password"]
       interval: 5s
@@ -38,10 +38,10 @@ services:
       CRON_SCHEDULE: "*/15 * * * *"
       CORS_ORIGIN: "http://localhost:5173"
     volumes:
-      - ./back-end/src:/app/src
+      - ./backend/src:/app/src
 
   frontend:
-    build: ./front-end
+    build: ./frontend
     container_name: rain_to_spill_frontend
     restart: unless-stopped
     depends_on:
