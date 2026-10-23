@@ -1,0 +1,56 @@
+services:
+  mysql_db:
+    image: mysql:8.4
+    container_name: rain_to_spill_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: casa0017password
+      MYSQL_DATABASE: rain_to_spill
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./back-end/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pcasa0017password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: rain_to_spill_backend
+    restart: unless-stopped
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: mysql_db
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: casa0017password
+      DB_NAME: rain_to_spill
+      CRON_ENABLED: "true"
+      CRON_SCHEDULE: "*/15 * * * *"
+      CORS_ORIGIN: "http://localhost:5173"
+    volumes:
+      - ./back-end/src:/app/src
+
+  frontend:
+    build: ./front-end
+    container_name: rain_to_spill_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  mysql_data:

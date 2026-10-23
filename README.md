@@ -13,6 +13,7 @@ Built with JavaScript, HTML & CSS, using:
 ## Screenshots  
 
 ## Running locally  
+in Website/ run: docker compose up -d --build
 
 ## Replace the Tags on the side menu of GitHub  
 

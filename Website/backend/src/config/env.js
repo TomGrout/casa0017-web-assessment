@@ -7,7 +7,6 @@ dotenv.config({
 
 const REQUIRED_ENV_VARS = ['DB_HOST', 'DB_USER', 'DB_NAME'];
 
-// TODO: Export configuration object with all env vars
 const config = Object.freeze({
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT) || 3000,
