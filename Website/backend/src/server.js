@@ -22,11 +22,11 @@ async function startServer() {
       console.log('Server and WebSockets listening...')
     })
 
-    app.listen(config.port, () => {
-      console.log(`Server listening on port ${config.port} in [${config.nodeEnv}] mode.`);
-    });
+    // app.listen(config.port, () => {
+    //   console.log(`Server listening on port ${config.port} in [${config.nodeEnv}] mode.`);
+    // });
 
-    
+
   } catch (error) {
     console.error('Failed to start server:', error.message);
     process.exit(1);

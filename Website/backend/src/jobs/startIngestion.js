@@ -4,8 +4,6 @@ import { fetchDischargeStatus } from '../services/thamesWater.service.js';
 import { fetchTidalStatus, fetchRainfallStatus } from '../services/eaFlood.service.js';
 
 export function initIngestionCron() {
-
-
   console.log(`[JOBS] Initializing ingestion cron job with schedule: ${config.cron.schedule}`);
 
   const runIngestion = async () => {
@@ -19,13 +17,15 @@ export function initIngestionCron() {
         fetchRainfallStatus()
       ]);
 
-      console.log(`[JOBS] Ingestion complete. Discharge source: [${discharge.source}], Tidal source: [${tidal.source}], Rainfall source: [${rainfall.source}]`);
+      const emitted = emitIngestionUpdate({ discharge, tidal, rainfall });
+
+      console.log(`[JOBS] Ingestion complete. Discharge source: [${discharge.source}], Tidal source: [${tidal.source}], Rainfall source: [${rainfall.source}], Socket emitted: [${emitted}]`);
     } catch (error) {
       console.error('[JOBS] Error during scheduled data ingestion:', error.message);
     }
   };
 
-  console.log('[JOBS] Forcing immediate initial ingestion run...');
+  console.log('[JOBS] Forcing initial ingestion run...');
   runIngestion();
 
   // schedule all subsequent runs
