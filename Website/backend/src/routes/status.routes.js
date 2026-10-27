@@ -1,9 +1,8 @@
-import express from 'express';
-// TODO: Import controllers
+import { Router } from 'express';
+import { getOverallStatus } from '../controllers/status.controller.js';
 
-const router = express.Router();
+const router = Router();
 
-// TODO: GET /api/status - Get live status banner data
-// TODO: GET /api/status/health - Get system health information
+router.get('/', getOverallStatus);
 
 export default router;

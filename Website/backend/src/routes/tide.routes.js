@@ -1,10 +1,8 @@
-import express from 'express';
-// TODO: Import controllers
+import { Router } from 'express';
+import { getTideStatus } from '../controllers/tide.controller.js';
 
-const router = express.Router();
+const router = Router();
 
-// TODO: GET /api/tide/current - Get current tide state
-// TODO: GET /api/tide/history?hours=24 - Get historical tide data
-// TODO: GET /api/tide/forecast?hours=12 - Get tide forecast
+router.get('/', getTideStatus);
 
 export default router;
