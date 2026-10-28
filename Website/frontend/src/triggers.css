@@ -1,0 +1,616 @@
+/* =====================================================================
+   STYLES for the "What sets them off?" page (triggers.html)
+   =====================================================================
+   Why a separate file? src/style.css is still the default Vite starter
+   style (it squeezes the page into a narrow centred column), so this
+   page has its own styles. If the team agrees on these colours, they
+   can be moved into style.css and shared by every page.
+
+   Sections in this file (same order as the page):
+     1. Colours & basics
+     2. Top navigation bar
+     3. Page title + filters
+     4. Cards grid
+     5. Scatter chart
+     6. Map (placeholder box)
+     7. Ranking table
+     8. Dark "big number" card
+     9. Smaller screens
+   ===================================================================== */
+
+/* ---------- 1. COLOURS & BASICS ---------- */
+/* Change a colour here and it changes everywhere it is used: var(--name) */
+:root {
+  --navy: #0f1f33; /* top bar + dark card */
+  --page-bg: #eef2f6; /* grey-blue page background */
+  --card-bg: #ffffff;
+  --border: #d9e0e7;
+  --text: #1c2b3a;
+  --muted: #5b6b7b; /* lighter text */
+  --teal: #13808a; /* buttons, switch, slider */
+  --cyan: #5cc8dc; /* rivers, highlights on dark */
+  --orange: #e9a23b; /* "in your selection" + "Spilling now" */
+  --grey-dot: #c5ccd3; /* "other spills" */
+}
+
+* {
+  box-sizing: border-box; /* padding is included in widths = easier layouts */
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--page-bg);
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+/* ---------- 2. TOP NAVIGATION BAR ---------- */
+.topbar {
+  display: flex; /* puts logo, links and status in one row */
+  align-items: center;
+  gap: 32px;
+  padding: 16px 32px;
+  background: var(--navy);
+  color: white;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+}
+
+.nav-links a {
+  color: #d5dde6;
+  text-decoration: none;
+  padding-bottom: 4px;
+}
+
+/* The page you are on is bold with a cyan line under it */
+.nav-links a.active {
+  color: white;
+  font-weight: 600;
+  border-bottom: 3px solid var(--cyan);
+}
+
+.topbar-right {
+  margin-left: auto; /* pushes this group to the right edge */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+}
+
+/* ---------- 3. PAGE TITLE + FILTERS ---------- */
+.page {
+  padding: 28px 32px 40px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+h1 {
+  font-size: 44px;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.intro {
+  max-width: 640px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.filters {
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0; /* stops the filters from getting squashed */
+}
+
+/* Shared look for the switch box and the dropdown */
+.filter-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px; /* big enough to tap on a phone */
+  padding: 0 16px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 16px;
+  color: var(--text);
+}
+
+/* --- The on/off switch ---
+   The real checkbox is hidden; .switch-track is the grey pill we see.
+   ::after draws the white circle. When the checkbox is :checked we move
+   the circle right and turn the track teal. */
+.switch {
+  cursor: pointer;
+}
+
+.switch input {
+  display: none;
+}
+
+.switch-track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: #ccd4dc;
+}
+
+.switch-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+}
+
+.switch input:checked + .switch-track {
+  background: var(--teal);
+}
+
+.switch input:checked + .switch-track::after {
+  left: 23px;
+}
+
+/* ---------- 4. CARDS GRID ---------- */
+/* 2 columns: the left one is a bit wider (1.7 : 1) */
+.grid {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 24px;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 28px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+h2 {
+  font-size: 22px;
+  color: var(--navy);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* ---------- 5. SCATTER CHART ---------- */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.dot-key {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--grey-dot);
+  margin-left: 10px;
+}
+
+.dot-key.selected {
+  background: var(--orange);
+  border: 1px solid #333;
+}
+
+/* The chart = y-axis labels on the left + the plot area */
+.chart {
+  display: flex;
+  height: 290px;
+}
+
+/* Labels are spread top to bottom. height: 0 makes each label's
+   centre sit exactly on its grid line. */
+.y-axis {
+  width: 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.y-axis span {
+  height: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* position: relative = the dots inside are positioned relative to this box */
+.plot-area {
+  position: relative;
+  flex: 1;
+  border-bottom: 2px solid #9aa6b2;
+  /* 4 light horizontal grid lines, one every 25% (= every 5 hours) */
+  background: repeating-linear-gradient(
+    to bottom,
+    #e3e8ed 0,
+    #e3e8ed 1px,
+    transparent 1px,
+    transparent 25%
+  );
+}
+
+/* One spill. "left" and "bottom" are set for each dot (see the DATA comment in triggers.html). */
+.dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px; /* half the width, so the CENTRE of the dot is on the value */
+  margin-bottom: -7px;
+  border-radius: 50%;
+  background: var(--grey-dot);
+}
+
+/* Dots inside the selection are orange with a dark outline */
+.dot.selected {
+  background: var(--orange);
+  border: 1.5px solid #3a2a10;
+  z-index: 2; /* draw on top of grey dots */
+}
+
+/* Shaded rectangle from 0 mm up to the slider value */
+.selection-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 13.3%; /* 4 mm out of 30 mm. JavaScript should change this when the slider moves. */
+  background: rgba(92, 200, 220, 0.15);
+  border: 2px dashed var(--teal);
+}
+
+/* Text that sits just to the right of the selection box */
+.selection-label {
+  position: absolute;
+  left: 100%;
+  top: 8px;
+  margin-left: 12px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.selection-label strong {
+  color: var(--text);
+}
+
+/* Grey text shown while there is no data yet */
+.empty-message {
+  color: var(--muted);
+  text-align: center;
+}
+
+.plot-area .empty-message {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+}
+
+/* Slider + x-axis are moved right by 44px so they line up with the plot */
+.slider-row,
+.x-axis,
+.axis-title {
+  margin-left: 44px;
+}
+
+.slider-row input {
+  width: 100%;
+  margin: 8px 0 0;
+  accent-color: var(--teal); /* colours the slider */
+}
+
+.x-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* width: 0 makes each label's centre sit exactly on its tick */
+.x-axis span {
+  width: 0;
+  display: flex;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.axis-title {
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* ---------- 6. MAP (placeholder box) ---------- */
+/* Grey box that holds the map. The map must have a height or it is invisible. */
+.map-placeholder {
+  height: 340px;
+  border-radius: 10px;
+  background: #e3e8ed;
+  border: 2px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+/* ---------- 7. RANKING TABLE ---------- */
+.link-button {
+  border: none;
+  background: none;
+  color: var(--teal);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ranking {
+  width: 100%;
+  border-collapse: collapse; /* no gaps between cells */
+  font-size: 16px;
+}
+
+.ranking th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--muted);
+  padding: 8px 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ranking td {
+  padding: 14px 8px;
+  border-bottom: 1px solid #edf0f3;
+}
+
+/* The top-ranked outfall gets a soft orange row */
+.ranking tr.top-row {
+  background: #fdf3e6;
+}
+
+/* Little bar next to the mm value. The inner bar's width shows the rain. */
+.bar {
+  display: inline-block;
+  width: 120px;
+  height: 6px;
+  margin-left: 10px;
+  border-radius: 3px;
+  background: #e6ebef;
+  vertical-align: middle;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--teal);
+}
+
+/* Status badges: use .badge-spilling or .badge-ok */
+.badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-spilling {
+  background: var(--orange);
+  color: var(--navy);
+}
+
+.badge-ok {
+  border: 1.5px solid var(--teal);
+  color: var(--teal);
+}
+
+/* ---------- 8. DARK "BIG NUMBER" CARD ---------- */
+.card-dark {
+  background: var(--navy);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+/* The tube: an outlined rounded box. The fill grows from the bottom. */
+.gauge {
+  position: relative;
+  width: 30px;
+  height: 110px;
+  border: 3px solid #c9d3dd;
+  border-radius: 15px;
+  flex-shrink: 0;
+}
+
+.gauge-fill {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  border-radius: 10px;
+  background: var(--cyan);
+}
+
+.stat-label {
+  font-size: 18px;
+}
+
+.stat-number {
+  font-size: 84px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--cyan);
+}
+
+.stat-text {
+  font-size: 19px;
+  line-height: 1.4;
+}
+
+.stat-buttons {
+  display: flex;
+  gap: 14px;
+}
+
+.button-primary,
+.button-outline {
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button-primary {
+  background: var(--cyan);
+  color: var(--navy);
+}
+
+.button-outline {
+  background: none;
+  color: white;
+  border: 1px solid #6f8193;
+}
+
+/* ---------- 9. SMALLER SCREENS ---------- */
+/* Below 1100px wide, stack everything in one column */
+@media (max-width: 1100px) {
+  .topbar,
+  .page-header {
+    flex-wrap: wrap;
+  }
+
+  .filters {
+    flex-wrap: wrap;
+    flex-shrink: 1; /* on small screens the filters are allowed to wrap */
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Without this, wide content (like the table) stretches the card off-screen */
+  .card {
+    min-width: 0;
+    overflow-x: auto; /* the table can be scrolled sideways inside its card */
+  }
+
+  .stat-number {
+    font-size: 60px;
+  }
+}
+
+/* Phones: smaller gaps and text, and let rows wrap onto 2 lines */
+@media (max-width: 700px) {
+  .topbar,
+  .page {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .topbar {
+    gap: 12px;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 15px;
+  }
+
+  .topbar-right {
+    margin-left: 0;
+  }
+
+  h1 {
+    font-size: 32px;
+  }
+
+  .card {
+    padding: 20px 16px;
+  }
+
+  .card-header,
+  .legend,
+  .stat-buttons {
+    flex-wrap: wrap;
+  }
+
+  .selection-label {
+    width: 170px;
+    font-size: 13px;
+  }
+
+  .ranking {
+    font-size: 14px;
+  }
+
+  .bar {
+    width: 60px;
+  }
+
+  .stat-number {
+    font-size: 48px;
+  }
+}
