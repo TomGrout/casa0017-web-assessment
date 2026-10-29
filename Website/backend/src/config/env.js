@@ -16,7 +16,8 @@ const config = Object.freeze({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME,
-    connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10
+    connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
+    ssl: process.env.DB_SSL === 'true'
   },
   apis: {
     thamesWaterBaseUrl:

@@ -11,7 +11,8 @@ const pool = mysql.createPool({
   connectionLimit: config.db.connectionLimit,
   queueLimit: 0,
   timezone: 'Z',
-  decimalNumbers: true
+  decimalNumbers: true,
+  ssl: config.db.ssl ? { rejectUnauthorized: true } : false
 });
 
 async function testConnection() {
