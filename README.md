@@ -13,11 +13,10 @@ Built with JavaScript, HTML & CSS, using:
 ## Screenshots  
 
 ## Running locally  
+in Website/ run: docker compose up -d --build  
 
 ### backend  
-in Website/ run: docker compose up -d --build  
-or  
-docker compose up -d --build --no-deps back-end && docker compose logs -f back-end  
+docker compose up -d --build --no-deps backend && docker compose logs -f backend  
 
 
 ## Replace the Tags on the side menu of GitHub  
