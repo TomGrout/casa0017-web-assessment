@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import config from '../config/env.js';
 import { fetchDischargeStatus } from '../services/thamesWater.service.js';
 import { fetchTidalStatus, fetchRainfallStatus } from '../services/eaFlood.service.js';
+import { emitIngestionUpdate } from '../sockets/socket.js';
 
 export function initIngestionCron() {
   console.log(`[JOBS] Initializing ingestion cron job with schedule: ${config.cron.schedule}`);

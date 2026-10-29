@@ -22,6 +22,7 @@
 | `DB_PASSWORD` | MySQL password |
 | `DB_NAME` | Database name |
 | `DB_PORT` | MySQL port (default: 3306) |
+| `DB_SSL` | Enable SSL for database (set `true` for TiDB Cloud) |
 | `CORS_ORIGIN` | Allowed CORS origin |
 | `CRON_ENABLED` | Enable/disable cron jobs |
 
