@@ -1,0 +1,241 @@
+/* =====================================================================
+   STYLES for the "Method & sources" page (method.html)
+   =====================================================================
+   The colours and the top bar are the same as on the dashboard page
+   (src/triggers.css). Once both pages are merged, the shared parts
+   (sections 1 and 2) can be moved into one file for every page.
+
+   Sections in this file (same order as the page):
+     1. Colours & basics
+     2. Top navigation bar
+     3. Page title + sections
+     4. Cards
+     5. "How it works" steps
+     6. API cards
+     7. References list
+     8. Smaller screens
+   ===================================================================== */
+
+/* ---------- 1. COLOURS & BASICS ---------- */
+/* Change a colour here and it changes everywhere it is used: var(--name) */
+:root {
+  --navy: #0f1f33; /* top bar, headings */
+  --page-bg: #eef2f6; /* grey-blue page background */
+  --card-bg: #ffffff;
+  --border: #d9e0e7;
+  --text: #1c2b3a;
+  --muted: #5b6b7b; /* lighter text */
+  --teal: #13808a; /* links, step numbers */
+  --cyan: #5cc8dc; /* highlights on dark */
+}
+
+* {
+  box-sizing: border-box; /* padding is included in widths = easier layouts */
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--page-bg);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--teal);
+}
+
+/* ---------- 2. TOP NAVIGATION BAR ---------- */
+.topbar {
+  display: flex; /* puts logo and links in one row */
+  align-items: center;
+  gap: 32px;
+  padding: 16px 32px;
+  background: var(--navy);
+  color: white;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+}
+
+.nav-links a {
+  color: #d5dde6;
+  text-decoration: none;
+  padding-bottom: 4px;
+}
+
+/* The page you are on is bold with a cyan line under it */
+.nav-links a.active {
+  color: white;
+  font-weight: 600;
+  border-bottom: 3px solid var(--cyan);
+}
+
+/* ---------- 3. PAGE TITLE + SECTIONS ---------- */
+.page {
+  max-width: 1200px; /* stops lines of text getting too long on big screens */
+  margin: 0 auto; /* centres the page */
+  padding: 28px 32px 48px;
+}
+
+.page-header {
+  margin-bottom: 32px;
+}
+
+h1 {
+  font-size: 44px;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.intro {
+  max-width: 640px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Each part of the page (How it works, Live data...) */
+.section {
+  margin-bottom: 40px;
+}
+
+h2 {
+  font-size: 26px;
+  color: var(--navy);
+  margin-bottom: 16px;
+}
+
+h3 {
+  font-size: 19px;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.section-intro {
+  color: var(--muted);
+  margin: -8px 0 16px; /* sits closer to the heading above it */
+}
+
+/* ---------- 4. CARDS ---------- */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  line-height: 1.5;
+}
+
+/* Cards side by side: as many 280px-wide columns as fit, then they wrap */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ---------- 5. "HOW IT WORKS" STEPS ---------- */
+/* The <ol> is a numbered list, but we hide its numbers and show our own circles */
+.steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: white;
+  font-weight: 700;
+}
+
+/* ---------- 6. API CARDS ---------- */
+.api-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Small grey label above the title, e.g. "Environment Agency" */
+.provider {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.used-for {
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Pushes the link to the bottom so all cards line up */
+.api-card a {
+  margin-top: auto;
+  padding-top: 12px;
+  font-weight: 600;
+}
+
+/* ---------- 7. REFERENCES LIST ---------- */
+.references {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.references li {
+  margin-bottom: 14px;
+}
+
+/* Long web addresses break onto the next line instead of going off-screen */
+.references a {
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 8. SMALLER SCREENS ---------- */
+/* Phones: less space around things and let the menu wrap onto 2 lines */
+@media (max-width: 700px) {
+  .topbar,
+  .page {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 15px;
+  }
+
+  h1 {
+    font-size: 32px;
+  }
+}

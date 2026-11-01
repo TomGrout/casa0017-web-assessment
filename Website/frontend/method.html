@@ -1,13 +1,307 @@
 <!doctype html>
+<!--
+  =====================================================================
+  PAGE: "Method & sources"  (method.html)
+  =====================================================================
+  Explains how the site works, which APIs (live data) we use, and lists
+  all the research we used (the bibliography).
+
+  This page is only HTML + CSS. It has no data to load, so it needs no
+  JavaScript.
+    1. method.html        <- this file: the STRUCTURE and all the text
+    2. src/method.css     <- the STYLE (colours, sizes, layout)
+
+  To add a new API:       copy one <div class="card api-card"> ... </div> block
+  To add a new reference: copy one <li> ... </li> in the References list
+                          (keep the list in alphabetical order - Harvard style)
+  =====================================================================
+-->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Method & Sources</title>
+    <title>Method &amp; sources – Rain To Spill</title>
+
+    <!-- Our styles for this page -->
+    <link rel="stylesheet" href="/src/method.css" />
   </head>
+
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/pages/method.js"></script>
+    <!-- ===================== TOP NAVIGATION BAR ===================== -->
+    <!-- Same bar as the other pages. The link for the current page gets class="active". -->
+    <header class="topbar">
+      <a class="logo" href="/">
+        <span class="logo-drop">💧</span>
+        Rain To Spill
+      </a>
+
+      <nav class="nav-links">
+        <a href="/">Overview</a>
+        <!-- TODO: point this to the live map page once someone builds it -->
+        <a href="/">Live map</a>
+        <a href="/triggers.html">What sets them off</a>
+        <a href="/tide.html">Where it goes</a>
+        <a href="/method.html" class="active">Method &amp; sources</a>
+      </nav>
+    </header>
+
+    <main class="page">
+      <!-- ===================== PAGE TITLE ===================== -->
+      <section class="page-header">
+        <h1>Method &amp; sources</h1>
+        <p class="intro">
+          How Rain To Spill collects its data, where every number comes from, and the research
+          behind the project.
+        </p>
+      </section>
+
+      <!-- ===================== 1. HOW IT WORKS ===================== -->
+      <!-- Written from what the backend code does (Website/backend).
+           Backend team: please check this is still correct if you change how the data works. -->
+      <section class="section">
+        <h2>How it works</h2>
+
+        <ol class="steps">
+          <li class="card">
+            <span class="step-number">1</span>
+            <h3>Check the outfalls</h3>
+            <p>
+              Every 15 minutes our server asks Thames Water which storm overflows on the River Lea,
+              Bow Creek and the Thames are spilling sewage.
+            </p>
+          </li>
+
+          <li class="card">
+            <span class="step-number">2</span>
+            <h3>Measure rain, river and tide</h3>
+            <p>
+              At the same time it collects rainfall from the Walthamstow rain gauge, the river level
+              at Lea Bridge and the tide level at Silvertown from the Environment Agency.
+            </p>
+          </li>
+
+          <li class="card">
+            <span class="step-number">3</span>
+            <h3>Record each spill</h3>
+            <p>
+              Every spill is saved in our database with the outfall it came from and the time it
+              started and stopped.
+            </p>
+          </li>
+
+          <li class="card">
+            <span class="step-number">4</span>
+            <h3>Link spills to rain and tide</h3>
+            <p>
+              For each spill we add up the rain that fell in the 24 hours before it started, and we
+              note the tide at that moment, to see when the tide pushes sewage back up the river.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <!-- ===================== 2. LIVE DATA (APIs) ===================== -->
+      <section class="section">
+        <h2>Live data we use</h2>
+        <p class="section-intro">
+          These APIs (online services that send data to our server) keep the site up to date.
+        </p>
+
+        <div class="card-grid">
+          <!-- One card per API. Copy a whole <div class="card api-card"> block to add another. -->
+          <div class="card api-card">
+            <p class="provider">Thames Water</p>
+            <h3>Open Data API: storm discharges</h3>
+            <p>
+              The list of storm overflow outfalls, where they are, and whether each one is spilling
+              right now.
+            </p>
+            <p class="used-for">Used for: outfalls, live spills</p>
+            <a href="https://data.thameswater.co.uk/">data.thameswater.co.uk</a>
+          </div>
+
+          <div class="card api-card">
+            <p class="provider">Environment Agency</p>
+            <h3>Real-time flood-monitoring API</h3>
+            <p>
+              Rainfall at Walthamstow, river level at Lea Bridge, and tide level at Silvertown,
+              measured every 15 minutes.
+            </p>
+            <p class="used-for">Used for: rain, river level, tide</p>
+            <a href="https://environment.data.gov.uk/flood-monitoring/doc/reference"
+              >environment.data.gov.uk/flood-monitoring</a
+            >
+          </div>
+
+          <div class="card api-card">
+            <p class="provider">Environment Agency</p>
+            <h3>Flood warnings</h3>
+            <p>Current flood alerts and warnings for Greater London.</p>
+            <p class="used-for">Used for: flood alerts</p>
+            <a href="https://environment.data.gov.uk/flood-monitoring/doc/reference"
+              >environment.data.gov.uk/flood-monitoring</a
+            >
+          </div>
+
+          <!-- NOTE: Open-Meteo and RainViewer are not in the bibliography yet - add them to the References below. -->
+          <div class="card api-card">
+            <p class="provider">Open-Meteo</p>
+            <h3>Weather forecast API</h3>
+            <p>Rain forecast and soil moisture, which tells us how wet the ground already is.</p>
+            <p class="used-for">Used for: wet catchment</p>
+            <a href="https://open-meteo.com/">open-meteo.com</a>
+          </div>
+
+          <div class="card api-card">
+            <p class="provider">RainViewer</p>
+            <h3>Weather radar API</h3>
+            <p>The latest rain radar images, showing where it is raining right now.</p>
+            <p class="used-for">Used for: rain radar</p>
+            <a href="https://www.rainviewer.com/api.html">rainviewer.com</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 3. HISTORICAL DATA ===================== -->
+      <section class="section">
+        <h2>Historical data</h2>
+
+        <div class="card-grid">
+          <div class="card api-card">
+            <p class="provider">Environment Agency</p>
+            <h3>Event Duration Monitoring: annual returns</h3>
+            <p>
+              Yearly records of how often and how long every storm overflow in England spilled.
+            </p>
+            <p class="used-for">Used for: past spills</p>
+            <a
+              href="https://www.data.gov.uk/dataset/event-duration-monitoring-storm-overflows-annual-returns"
+              >data.gov.uk</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== 4. REFERENCES (bibliography) ===================== -->
+      <!-- Harvard style, in alphabetical order. Each reference is one <li>. -->
+      <section class="section">
+        <h2>References</h2>
+
+        <div class="card">
+          <ul class="references">
+            <li>
+              Defra Press Office (2023) ‘Government response to BBC reporting on storm overflows’,
+              <em>Defra in the media</em>, 5 September. Available at:
+              <a href="https://deframedia.blog.gov.uk/2023/09/05/government-response-to-bbc-reporting-on-storm-overflows/"
+                >https://deframedia.blog.gov.uk/2023/09/05/government-response-to-bbc-reporting-on-storm-overflows/</a
+              >
+              (Accessed: 9 October 2026).
+            </li>
+            <li>
+              Dezeen (2025) ‘“Super sewer fully up and running” in London to protect River Thames’,
+              <em>Dezeen</em>, 20 February. Available at:
+              <a href="https://www.dezeen.com/2025/02/20/thames-tideway-tunnel-london-river-thames/"
+                >https://www.dezeen.com/2025/02/20/thames-tideway-tunnel-london-river-thames/</a
+              >
+              (Accessed: 10 October 2026).
+            </li>
+            <li>
+              <em>Environment Act 2021</em>, c. 30. Available at:
+              <a href="https://www.legislation.gov.uk/ukpga/2021/30"
+                >https://www.legislation.gov.uk/ukpga/2021/30</a
+              >
+              (Accessed: 9 October 2026).
+            </li>
+            <li>
+              Environment Agency (no date) <em>Real-time flood-monitoring API: reference</em>.
+              Available at:
+              <a href="https://environment.data.gov.uk/flood-monitoring/doc/reference"
+                >https://environment.data.gov.uk/flood-monitoring/doc/reference</a
+              >
+              (Accessed: 10 October 2026).
+            </li>
+            <li>
+              Environment Agency (2025) <em>Environment Agency storm overflow spill data for 2024</em>.
+              Press release, 27 March. Available at:
+              <a href="https://www.gov.uk/government/news/environment-agency-storm-overflow-spill-data-for-2024"
+                >https://www.gov.uk/government/news/environment-agency-storm-overflow-spill-data-for-2024</a
+              >
+              (Accessed: 9 October 2026).
+            </li>
+            <li>
+              Environment Agency (2026a)
+              <em>Fewer and shorter storm overflow spills in 2025, new monitoring data shows</em>.
+              Press release, 26 March. Available at:
+              <a href="https://www.gov.uk/government/news/fewer-and-shorter-storm-overflow-spills-in-2025-new-monitoring-data-shows"
+                >https://www.gov.uk/government/news/fewer-and-shorter-storm-overflow-spills-in-2025-new-monitoring-data-shows</a
+              >
+              (Accessed: 10 October 2026).
+            </li>
+            <li>
+              Environment Agency (2026b)
+              <em>Event Duration Monitoring – Storm Overflows – Annual Returns</em> [Data set].
+              Available at:
+              <a href="https://www.data.gov.uk/dataset/event-duration-monitoring-storm-overflows-annual-returns"
+                >https://www.data.gov.uk/dataset/event-duration-monitoring-storm-overflows-annual-returns</a
+              >
+              (Accessed: 9 October 2026).
+            </li>
+            <li>
+              Flood Radar (no date) <em>Flood Radar</em>. Available at:
+              <a href="https://www.floodradar.co.uk/">https://www.floodradar.co.uk/</a>
+              (Accessed: 10 October 2026).
+            </li>
+            <li>
+              Lipp, A. and Dawe, J. (no date) <em>SewageMap</em>. Available at:
+              <a href="https://www.sewagemap.co.uk/">https://www.sewagemap.co.uk/</a>
+              (Accessed: 9 October 2026).
+            </li>
+            <li>
+              The Rivers Trust (no date) <em>Sewage map</em>. Available at:
+              <a href="https://theriverstrust.org/key-issues/sewage-in-rivers"
+                >https://theriverstrust.org/key-issues/sewage-in-rivers</a
+              >
+              (Accessed: 10 October 2026).
+            </li>
+            <li>
+              The Rivers Trust (2025) <em>2024 sewage spill data</em>, 28 March. Available at:
+              <a href="https://theriverstrust.org/about-us/news/2024-sewage-spill-cso-data"
+                >https://theriverstrust.org/about-us/news/2024-sewage-spill-cso-data</a
+              >
+              (Accessed: 9 October 2026).
+            </li>
+            <li>
+              Thames Water (no date a) <em>History of London’s sewer system</em>. Available at:
+              <a href="https://www.thameswater.co.uk/about-us/community/days-out/riverside-spaces/history-of-london-sewer-system"
+                >https://www.thameswater.co.uk/about-us/community/days-out/riverside-spaces/history-of-london-sewer-system</a
+              >
+              (Accessed: 10 October 2026).
+            </li>
+            <li>
+              Thames Water (no date b)
+              <em>Open data: storm discharge (Event Duration Monitoring)</em> [Data set]. Available
+              at: <a href="https://data.thameswater.co.uk/">https://data.thameswater.co.uk/</a>
+              (Accessed: 9 October 2026).
+            </li>
+            <li>
+              Thames Water (no date c) <em>Thames Tideway Tunnel</em>. Available at:
+              <a href="https://www.thameswater.co.uk/about-us/projects/thames-tideway-tunnel"
+                >https://www.thameswater.co.uk/about-us/projects/thames-tideway-tunnel</a
+              >
+              (Accessed: 10 October 2026).
+            </li>
+            <li>
+              UCL (2025) <em>Sewage map of England</em>. UCL Mathematical &amp; Physical Sciences
+              news, July. Available at:
+              <a href="https://www.ucl.ac.uk/mathematical-physical-sciences/news/2025/jul/sewage-map-england"
+                >https://www.ucl.ac.uk/mathematical-physical-sciences/news/2025/jul/sewage-map-england</a
+              >
+              (Accessed: 9 October 2026).
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
   </body>
 </html>
