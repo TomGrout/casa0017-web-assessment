@@ -1,0 +1,1083 @@
+/* =====================================================================
+   STYLES for the "Overview" page (index.html)
+   =====================================================================
+   The colours and the top bar are the same as on the dashboard page
+   (src/triggers.css) and the method page (src/method.css). Once all the
+   pages are merged, sections 1 and 2 can be moved into one shared file.
+
+   Sections in this file (same order as the page):
+     1. Colours & basics
+     2. Top navigation bar
+     3. Opening (dark band) + "Right now" readings
+     4. Flowchart (the story in 3 steps, with sketches)
+     5. Story chapters (layout)
+     6. Figure 1: the sewer pipe
+     7. Figure 2: the rain gauge (dark card)
+     8. Figure 3: the tide
+     9. How we know + footer
+     10. Smaller screens
+   ===================================================================== */
+
+/* ---------- 1. COLOURS & BASICS ---------- */
+/* Change a colour here and it changes everywhere it is used: var(--name) */
+:root {
+  --navy: #0f1f33; /* top bar, opening, headings */
+  --page-bg: #eef2f6; /* grey-blue page background */
+  --card-bg: #ffffff;
+  --border: #d9e0e7;
+  --text: #1c2b3a;
+  --muted: #5b6b7b; /* lighter text */
+  --teal: #13808a; /* links, buttons */
+  --cyan: #5cc8dc; /* water, highlights on dark */
+  --orange: #e9a23b; /* sewage / "spilling" - same as the dashboard */
+  --grey-dot: #c5ccd3;
+  --light-on-dark: #c9d3dd; /* body text on navy */
+}
+
+* {
+  box-sizing: border-box; /* padding is included in widths = easier layouts */
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--page-bg);
+}
+
+h1,
+h2,
+p,
+figure {
+  margin: 0;
+}
+
+a {
+  color: var(--teal);
+}
+
+/* A clear outline when you move around the page with the Tab key */
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 3px;
+}
+
+/* Smooth scroll for the "Follow the water" link,
+   but only if the visitor hasn't asked their computer for less motion */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Centres the content and stops it getting too wide on big screens */
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* ---------- 2. TOP NAVIGATION BAR ---------- */
+.topbar {
+  display: flex; /* puts logo, links and status in one row */
+  align-items: center;
+  gap: 32px;
+  padding: 16px 32px;
+  background: var(--navy);
+  color: white;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+}
+
+.nav-links a {
+  color: #d5dde6;
+  text-decoration: none;
+  padding-bottom: 4px;
+}
+
+/* The page you are on is bold with a cyan line under it */
+.nav-links a.active {
+  color: white;
+  font-weight: 600;
+  border-bottom: 3px solid var(--cyan);
+}
+
+.topbar-right {
+  margin-left: auto; /* pushes this group to the right edge */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+}
+
+/* On the navy parts of the page a teal outline is hard to see, so use cyan */
+.topbar a:focus-visible,
+.opening a:focus-visible {
+  outline-color: var(--cyan);
+}
+
+/* ---------- 3. OPENING (dark band) + "RIGHT NOW" READINGS ---------- */
+/* Same navy as the top bar, so the two look like one block */
+.opening {
+  background: var(--navy);
+  color: white;
+  padding: 48px 0 56px;
+  border-top: 1px solid #22344b; /* a faint line under the menu */
+}
+
+.kicker {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--cyan);
+  margin-bottom: 16px;
+}
+
+.opening h1 {
+  max-width: 880px;
+  font-size: 52px;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  color: white;
+  text-wrap: balance; /* makes the lines about the same length, so one word isn't left alone */
+}
+
+.lede {
+  max-width: 640px;
+  margin-top: 20px;
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--light-on-dark);
+}
+
+/* Less space between the 2 paragraphs of the intro */
+.lede + .lede {
+  margin-top: 12px;
+}
+
+/* 2 columns: text on the left, the sketch map on the right (max 440px wide) */
+.opening-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+  gap: 56px;
+  align-items: center;
+}
+
+/* --- The sketch map ---
+   Each part of the drawing has a class that says how to colour it. */
+.hero-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The Thames is wide, the Lea is thinner. Round ends look hand-drawn. */
+.map-thames,
+.map-lea {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-linecap: round;
+}
+
+.map-thames {
+  stroke-width: 18;
+}
+
+.map-lea {
+  stroke-width: 7;
+}
+
+/* River names in italics, like on a printed map */
+.map-water {
+  fill: var(--cyan);
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* The orange dashed "rising tide" arrow */
+.map-push,
+.map-push-head {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.map-push {
+  stroke-dasharray: 6 6; /* 6 drawn, 6 gap = a dashed line */
+}
+
+.map-push-label {
+  fill: var(--orange);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.map-outfall {
+  fill: var(--orange);
+}
+
+/* Gauges: navy circle with a white ring */
+.map-gauge {
+  fill: var(--navy);
+  stroke: white;
+  stroke-width: 2.5;
+}
+
+.map-label {
+  fill: white;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.map-small {
+  fill: #9fb0c1;
+  font-size: 12px;
+}
+
+/* The key under the map */
+.hero-map figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--light-on-dark);
+}
+
+.key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The little shapes in the key, the same as on the map */
+.key-outfall,
+.key-gauge {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.key-outfall {
+  background: var(--orange);
+}
+
+.key-gauge {
+  border: 2.5px solid white;
+}
+
+.key-note {
+  margin-left: auto; /* pushes it to the right-hand end */
+  color: #9fb0c1;
+  font-style: italic;
+}
+
+/* 4 columns: the "Right now" title, then the 3 readings */
+.right-now {
+  display: grid;
+  grid-template-columns: 110px repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 44px;
+  padding-top: 20px;
+  border-top: 1px solid #2c3d52;
+}
+
+/* A thin line on the left of each reading separates them */
+.reading {
+  padding-left: 20px;
+  border-left: 1px solid #2c3d52;
+}
+
+.right-now-title {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #9fb0c1;
+  padding-top: 8px;
+}
+
+.reading-number {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--cyan);
+}
+
+/* "--" while there is no number yet: grey, so it doesn't look like a real value */
+.reading-number.is-empty {
+  color: #4b5d72;
+}
+
+/* The "of 38" in "3 of 38" */
+.reading-of {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--light-on-dark);
+}
+
+.reading-label {
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--light-on-dark);
+}
+
+/* Error text under the readings. :empty = hidden while there is no text in it */
+.live-message {
+  grid-column: 1 / -1; /* stretches across all 4 columns */
+  font-size: 15px;
+  color: #f3c27a;
+}
+
+.live-message:empty {
+  display: none;
+}
+
+.follow-link {
+  display: inline-block;
+  margin-top: 40px;
+  padding-bottom: 2px;
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 2px solid var(--cyan);
+}
+
+.follow-link:hover {
+  color: var(--cyan);
+}
+
+/* ---------- 4. FLOWCHART (the story in 3 steps, with sketches) ---------- */
+.flow-section {
+  padding: 56px 0 8px;
+}
+
+.flow-section h2 {
+  font-size: 30px;
+  color: var(--navy);
+}
+
+.flow-intro {
+  margin: 8px 0 28px;
+  font-size: 17px;
+  color: var(--muted);
+}
+
+/* 7 columns: step | arrow | step | arrow | step | arrow | the 2 endings */
+.flow {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr 40px 1fr 40px 1fr;
+  gap: 8px;
+}
+
+.flow h3 {
+  margin: 0 0 6px;
+  font-size: 19px;
+  line-height: 1.25;
+  color: var(--navy);
+}
+
+/* One step. The whole box is a link to its chapter, so we remove the
+   usual link colour and underline. */
+.flow-step {
+  display: block;
+  padding: 20px;
+  background: white;
+  border: 2px solid var(--navy);
+  /* Uneven corners make the box look drawn by hand */
+  border-radius: 14px 20px 12px 18px / 18px 12px 20px 14px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.flow-step:hover {
+  border-color: var(--teal);
+}
+
+.flow-step:hover h3 {
+  text-decoration: underline;
+}
+
+.flow-step p {
+  line-height: 1.5;
+}
+
+/* "Step 1", "Tide going out"... */
+.flow-number {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--teal);
+}
+
+/* "Measured at Walthamstow": under a dashed line at the bottom of the box */
+.flow-where {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* --- The sketches (SVG drawings) ---
+   Each line in a drawing has a class that says how to colour it. */
+.sketch {
+  display: block;
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  margin-bottom: 14px;
+}
+
+/* .ink = dark pen lines */
+.sketch .ink {
+  fill: none;
+  stroke: var(--navy);
+  stroke-width: 2.5;
+  stroke-linecap: round; /* round ends, like a pen */
+  stroke-linejoin: round;
+}
+
+/* .rain = blue pen lines (rain, water) */
+.sketch .rain {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.sketch .water-fill {
+  fill: var(--cyan);
+}
+
+/* Orange = sewage, same as everywhere else on the site */
+.sketch .sewage {
+  fill: var(--orange);
+}
+
+.sketch .sewage-patch {
+  fill: var(--orange);
+  opacity: 0.35; /* see-through */
+}
+
+/* The hand-drawn arrows between the steps */
+.flow-arrow {
+  align-self: center; /* middle of the row, not the top */
+  width: 40px;
+  height: 24px;
+}
+
+.flow-arrow path {
+  fill: none;
+  stroke: var(--navy);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The 2 endings, one above the other */
+.flow-ends {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+.flow-end {
+  padding: 14px 16px;
+  background: white;
+  border: 2px solid var(--teal);
+  border-radius: 18px 12px 16px 14px / 12px 18px 14px 16px;
+}
+
+.flow-end h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+/* The bad ending is orange, like sewage on the rest of the site */
+.flow-end-bad {
+  border-color: var(--orange);
+  background: #fdf3e6;
+}
+
+.flow-end-bad .flow-number {
+  color: #8a4f00; /* dark orange: easier to read than the bright orange */
+}
+
+/* ---------- 5. STORY CHAPTERS (layout) ---------- */
+/* Each chapter has 3 columns: label | text | figure */
+.chapter {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+  padding: 64px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.chapter:last-child {
+  border-bottom: none;
+}
+
+/* "Rain / Walthamstow": the step, and where we measure it */
+.chapter-label {
+  padding-top: 10px;
+  border-top: 3px solid var(--teal);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.chapter-label span {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* "Step 1": matches the step numbers in the flowchart */
+.chapter-label .chapter-step {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--teal);
+}
+
+.chapter-text h2 {
+  font-size: 30px;
+  line-height: 1.2;
+  color: var(--navy);
+  margin-bottom: 18px;
+}
+
+.chapter-text p {
+  max-width: 34em; /* about 65 letters per line, easy to read */
+  margin-bottom: 14px;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* The link at the end of each chapter, e.g. "See what sets them off →" */
+.chapter-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.chapter-link:hover {
+  text-decoration: underline;
+}
+
+/* Cards look the same as on the other pages */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.figure figcaption {
+  margin-top: 18px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ---------- 6. FIGURE 1: THE SEWER PIPE ---------- */
+.sewer + .sewer {
+  margin-top: 28px; /* space between "Dry day" and "Heavy rain" */
+}
+
+.sewer-title {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+/* Labels for the 2 ends of the pipe */
+.sewer-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* The pipe: a long rounded box. position: relative = the water and the
+   dashed line inside are placed relative to it. */
+.pipe {
+  position: relative;
+  height: 48px;
+  border: 3px solid #9aa6b2;
+  border-radius: 24px;
+  background: #f6f8fa;
+  overflow: hidden; /* keeps the water inside the rounded corners */
+}
+
+/* The water fills up from the bottom. Its height is set in index.html. */
+.pipe-water {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--cyan);
+}
+
+/* Dashed line = the overflow level */
+.overflow-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 25%;
+  border-top: 2px dashed var(--navy);
+  z-index: 1; /* drawn on top of the water */
+}
+
+/* The outfall: a short pipe hanging under the main pipe, with its label */
+.outfall {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-left: 58%;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.outfall-pipe {
+  flex-shrink: 0;
+  width: 10px;
+  height: 30px;
+  border-radius: 0 0 5px 5px;
+}
+
+.outfall-closed {
+  color: var(--muted);
+}
+
+.outfall-closed .outfall-pipe {
+  border: 2px dashed var(--grey-dot);
+  border-top: none;
+}
+
+.outfall-open {
+  color: var(--navy);
+}
+
+.outfall-open .outfall-pipe {
+  background: var(--orange);
+}
+
+/* ---------- 7. FIGURE 2: THE RAIN GAUGE (dark card) ---------- */
+/* Same look as the dark card on the "What sets them off" page */
+.card-dark {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: white;
+}
+
+.card-dark figcaption {
+  color: var(--light-on-dark);
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+/* The tube: an outlined rounded box. The fill grows from the bottom. */
+.gauge {
+  position: relative;
+  width: 30px;
+  height: 120px;
+  border: 3px solid var(--light-on-dark);
+  border-radius: 15px;
+  flex-shrink: 0;
+}
+
+.gauge-fill {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  height: 0; /* now.js changes this when the data arrives */
+  max-height: calc(100% - 6px);
+  border-radius: 10px;
+  background: var(--cyan);
+}
+
+.stat-label {
+  font-size: 18px;
+}
+
+.stat-number {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--cyan);
+}
+
+/* ---------- 8. FIGURE 3: THE TIDE ---------- */
+.tide-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tide-button {
+  min-height: 44px; /* big enough to tap on a phone */
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* The chosen button. aria-pressed is changed by now.js */
+.tide-button[aria-pressed='true'] {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: white;
+}
+
+/* Little "now" tag: hidden unless now.js adds the class "is-now" to a button */
+.now-tag {
+  display: none;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--orange);
+  color: var(--navy);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tide-button.is-now .now-tag {
+  display: inline-block;
+}
+
+/* The river strip: "Stratford" | water | "Thames" in one row */
+.river {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.place {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.water {
+  position: relative;
+  flex: 1;
+  height: 72px;
+  border-radius: 10px;
+  background: #d7eef3;
+  overflow: hidden;
+  transition: background 0.4s;
+}
+
+/* On a rising tide the water turns a little brown: the sewage stays put */
+.river.rising .water {
+  background: #f4e7d4;
+}
+
+.water-name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6px;
+  text-align: center;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+/* The outfall: a short dark pipe coming in from the river bank (top edge) */
+.outfall-marker {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 10px;
+  height: 16px;
+  margin-left: -5px;
+  border-radius: 0 0 5px 5px;
+  background: var(--navy);
+}
+
+/* One blob of sewage. It starts at the outfall (left: 50%) and drifts
+   towards the Thames. "top" and "animation-delay" are set in index.html. */
+.particle {
+  position: absolute;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--orange);
+  animation: drift-out 4.8s linear infinite;
+}
+
+/* Rising tide: the same blobs drift the other way, towards Stratford */
+.river.rising .particle {
+  animation-name: drift-in;
+}
+
+@keyframes drift-out {
+  from {
+    left: 50%;
+    opacity: 1;
+  }
+  to {
+    left: 97%;
+    opacity: 0.2;
+  }
+}
+
+@keyframes drift-in {
+  from {
+    left: 50%;
+    opacity: 1;
+  }
+  to {
+    left: 3%;
+    opacity: 0.2;
+  }
+}
+
+/* No moving dots for people who have asked their computer for less motion.
+   The dots just sit on the side they are heading to. */
+@media (prefers-reduced-motion: reduce) {
+  .particle {
+    animation: none;
+    left: 75%;
+  }
+
+  .river.rising .particle {
+    left: 25%;
+  }
+}
+
+/* ---------- 9. HOW WE KNOW + FOOTER ---------- */
+.how {
+  padding: 56px 0;
+  background: white;
+  border-top: 1px solid var(--border);
+}
+
+.how h2 {
+  font-size: 30px;
+  color: var(--navy);
+}
+
+.how-intro {
+  margin: 8px 0 28px;
+  font-size: 17px;
+  color: var(--muted);
+}
+
+/* The 4 sources sit side by side under a navy line */
+.sources {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin: 0 0 28px;
+  padding-top: 16px;
+  border-top: 2px solid var(--navy);
+}
+
+.sources dt {
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.sources dd {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.footer {
+  padding: 28px 0;
+  background: var(--navy);
+  color: var(--light-on-dark);
+  font-size: 15px;
+}
+
+.footer p + p {
+  margin-top: 4px;
+}
+
+/* ---------- 10. SMALLER SCREENS ---------- */
+/* Below 1100px wide: the flowchart and the chapters become one column */
+@media (max-width: 1100px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  /* Opening: the map goes under the text */
+  .opening-top {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .hero-map {
+    max-width: 440px;
+  }
+
+  /* Flowchart: boxes one under the other, arrows turned to point down */
+  .flow {
+    grid-template-columns: 1fr;
+    max-width: 560px;
+  }
+
+  .flow-arrow {
+    justify-self: center; /* centre the arrow left-to-right */
+    transform: rotate(90deg);
+  }
+
+  .chapter {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 48px 0;
+  }
+
+  /* The label sits on one line: "Step 1  Rain  Walthamstow" */
+  .chapter-label {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    max-width: 320px;
+  }
+
+  .chapter-label span {
+    display: inline;
+  }
+
+  /* The figure doesn't need to be wider than this */
+  .figure {
+    max-width: 560px;
+  }
+
+  .right-now {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .right-now-title {
+    grid-column: 1 / -1;
+    padding-top: 0;
+  }
+
+  .sources {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Phones: smaller text, less space, everything stacked */
+@media (max-width: 700px) {
+  .topbar,
+  .wrap {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .topbar {
+    gap: 12px;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 15px;
+  }
+
+  .topbar-right {
+    margin-left: 0;
+  }
+
+  .opening {
+    padding: 32px 0 40px;
+  }
+
+  .opening h1 {
+    font-size: 34px;
+  }
+
+  .lede {
+    font-size: 17px;
+  }
+
+  .right-now {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .reading-number {
+    font-size: 32px;
+  }
+
+  .chapter-text h2,
+  .how h2 {
+    font-size: 24px;
+  }
+
+  .card {
+    padding: 20px 16px;
+  }
+
+  .stat-number {
+    font-size: 48px;
+  }
+
+  .outfall {
+    margin-left: 40%;
+  }
+
+  .sources {
+    grid-template-columns: 1fr;
+  }
+}
