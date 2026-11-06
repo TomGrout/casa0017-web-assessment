@@ -1,5 +1,9 @@
 -- TiDB-compatible schema for casa0017_sewage
 
+CREATE DATABASE IF NOT EXISTS `casa0017_sewage`;
+USE `casa0017_sewage`;
+
+
 CREATE TABLE IF NOT EXISTS `outfalls` (
   `permit_number` varchar(50) NOT NULL,
   `location_name` varchar(255) NOT NULL,
