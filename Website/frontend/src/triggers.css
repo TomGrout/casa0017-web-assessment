@@ -1,40 +1,18 @@
-/* =====================================================================
-   STYLES for the "What sets them off?" page (triggers.html)
-   =====================================================================
-   Why a separate file? src/style.css is still the default Vite starter
-   style (it squeezes the page into a narrow centred column), so this
-   page has its own styles. If the team agrees on these colours, they
-   can be moved into style.css and shared by every page.
-
-   Sections in this file (same order as the page):
-     1. Colours & basics
-     2. Top navigation bar
-     3. Page title + filters
-     4. Cards grid
-     5. Scatter chart
-     6. Map (placeholder box)
-     7. Ranking table
-     8. Dark "big number" card
-     9. Smaller screens
-   ===================================================================== */
-
-/* ---------- 1. COLOURS & BASICS ---------- */
-/* Change a colour here and it changes everywhere it is used: var(--name) */
 :root {
-  --navy: #0f1f33; /* top bar + dark card */
-  --page-bg: #eef2f6; /* grey-blue page background */
+  --navy: #0f1f33;
+  --page-bg: #eef2f6;
   --card-bg: #ffffff;
   --border: #d9e0e7;
   --text: #1c2b3a;
-  --muted: #5b6b7b; /* lighter text */
-  --teal: #13808a; /* buttons, switch, slider */
-  --cyan: #5cc8dc; /* rivers, highlights on dark */
-  --orange: #e9a23b; /* "in your selection" + "Spilling now" */
-  --grey-dot: #c5ccd3; /* "other spills" */
+  --muted: #5b6b7b;
+  --teal: #13808a;
+  --cyan: #5cc8dc;
+  --orange: #e9a23b;
+  --grey-dot: #c5ccd3;
 }
 
 * {
-  box-sizing: border-box; /* padding is included in widths = easier layouts */
+  box-sizing: border-box;
 }
 
 body {
@@ -50,9 +28,8 @@ p {
   margin: 0;
 }
 
-/* ---------- 2. TOP NAVIGATION BAR ---------- */
 .topbar {
-  display: flex; /* puts logo, links and status in one row */
+  display: flex;
   align-items: center;
   gap: 32px;
   padding: 16px 32px;
@@ -78,7 +55,6 @@ p {
   padding-bottom: 4px;
 }
 
-/* The page you are on is bold with a cyan line under it */
 .nav-links a.active {
   color: white;
   font-weight: 600;
@@ -86,7 +62,7 @@ p {
 }
 
 .topbar-right {
-  margin-left: auto; /* pushes this group to the right edge */
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -100,7 +76,6 @@ p {
   background: var(--cyan);
 }
 
-/* ---------- 3. PAGE TITLE + FILTERS ---------- */
 .page {
   padding: 28px 32px 40px;
 }
@@ -128,15 +103,14 @@ h1 {
 .filters {
   display: flex;
   gap: 16px;
-  flex-shrink: 0; /* stops the filters from getting squashed */
+  flex-shrink: 0;
 }
 
-/* Shared look for the switch box and the dropdown */
 .filter-box {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 48px; /* big enough to tap on a phone */
+  min-height: 48px;
   padding: 0 16px;
   background: white;
   border: 1px solid var(--border);
@@ -145,10 +119,6 @@ h1 {
   color: var(--text);
 }
 
-/* --- The on/off switch ---
-   The real checkbox is hidden; .switch-track is the grey pill we see.
-   ::after draws the white circle. When the checkbox is :checked we move
-   the circle right and turn the track teal. */
 .switch {
   cursor: pointer;
 }
@@ -184,8 +154,6 @@ h1 {
   left: 23px;
 }
 
-/* ---------- 4. CARDS GRID ---------- */
-/* 2 columns: the left one is a bit wider (1.7 : 1) */
 .grid {
   display: grid;
   grid-template-columns: 1.7fr 1fr;
@@ -216,7 +184,6 @@ h2 {
   color: var(--muted);
 }
 
-/* ---------- 5. SCATTER CHART ---------- */
 .legend {
   display: flex;
   align-items: center;
@@ -238,14 +205,11 @@ h2 {
   border: 1px solid #333;
 }
 
-/* The chart = y-axis labels on the left + the plot area */
 .chart {
   display: flex;
   height: 290px;
 }
 
-/* Labels are spread top to bottom. height: 0 makes each label's
-   centre sit exactly on its grid line. */
 .y-axis {
   width: 44px;
   display: flex;
@@ -261,12 +225,10 @@ h2 {
   align-items: center;
 }
 
-/* position: relative = the dots inside are positioned relative to this box */
 .plot-area {
   position: relative;
   flex: 1;
   border-bottom: 2px solid #9aa6b2;
-  /* 4 light horizontal grid lines, one every 25% (= every 5 hours) */
   background: repeating-linear-gradient(
     to bottom,
     #e3e8ed 0,
@@ -276,36 +238,32 @@ h2 {
   );
 }
 
-/* One spill. "left" and "bottom" are set for each dot (see the DATA comment in triggers.html). */
 .dot {
   position: absolute;
   width: 14px;
   height: 14px;
-  margin-left: -7px; /* half the width, so the CENTRE of the dot is on the value */
+  margin-left: -7px;
   margin-bottom: -7px;
   border-radius: 50%;
   background: var(--grey-dot);
 }
 
-/* Dots inside the selection are orange with a dark outline */
 .dot.selected {
   background: var(--orange);
   border: 1.5px solid #3a2a10;
-  z-index: 2; /* draw on top of grey dots */
+  z-index: 2;
 }
 
-/* Shaded rectangle from 0 mm up to the slider value */
 .selection-box {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 13.3%; /* 4 mm out of 30 mm. JavaScript should change this when the slider moves. */
+  width: 13.3%;
   background: rgba(92, 200, 220, 0.15);
   border: 2px dashed var(--teal);
 }
 
-/* Text that sits just to the right of the selection box */
 .selection-label {
   position: absolute;
   left: 100%;
@@ -322,7 +280,6 @@ h2 {
   color: var(--text);
 }
 
-/* Grey text shown while there is no data yet */
 .empty-message {
   color: var(--muted);
   text-align: center;
@@ -335,7 +292,6 @@ h2 {
   right: 0;
 }
 
-/* Slider + x-axis are moved right by 44px so they line up with the plot */
 .slider-row,
 .x-axis,
 .axis-title {
@@ -345,7 +301,7 @@ h2 {
 .slider-row input {
   width: 100%;
   margin: 8px 0 0;
-  accent-color: var(--teal); /* colours the slider */
+  accent-color: var(--teal);
 }
 
 .x-axis {
@@ -355,7 +311,6 @@ h2 {
   color: var(--muted);
 }
 
-/* width: 0 makes each label's centre sit exactly on its tick */
 .x-axis span {
   width: 0;
   display: flex;
@@ -370,8 +325,6 @@ h2 {
   margin-top: 6px;
 }
 
-/* ---------- 6. MAP (placeholder box) ---------- */
-/* Grey box that holds the map. The map must have a height or it is invisible. */
 .map-placeholder {
   height: 340px;
   border-radius: 10px;
@@ -383,7 +336,6 @@ h2 {
   color: var(--muted);
 }
 
-/* ---------- 7. RANKING TABLE ---------- */
 .link-button {
   border: none;
   background: none;
@@ -396,7 +348,7 @@ h2 {
 
 .ranking {
   width: 100%;
-  border-collapse: collapse; /* no gaps between cells */
+  border-collapse: collapse;
   font-size: 16px;
 }
 
@@ -413,12 +365,10 @@ h2 {
   border-bottom: 1px solid #edf0f3;
 }
 
-/* The top-ranked outfall gets a soft orange row */
 .ranking tr.top-row {
   background: #fdf3e6;
 }
 
-/* Little bar next to the mm value. The inner bar's width shows the rain. */
 .bar {
   display: inline-block;
   width: 120px;
@@ -436,7 +386,6 @@ h2 {
   background: var(--teal);
 }
 
-/* Status badges: use .badge-spilling or .badge-ok */
 .badge {
   display: inline-block;
   padding: 4px 14px;
@@ -456,7 +405,6 @@ h2 {
   color: var(--teal);
 }
 
-/* ---------- 8. DARK "BIG NUMBER" CARD ---------- */
 .card-dark {
   background: var(--navy);
   color: white;
@@ -472,7 +420,6 @@ h2 {
   gap: 24px;
 }
 
-/* The tube: an outlined rounded box. The fill grows from the bottom. */
 .gauge {
   position: relative;
   width: 30px;
@@ -533,8 +480,6 @@ h2 {
   border: 1px solid #6f8193;
 }
 
-/* ---------- 9. SMALLER SCREENS ---------- */
-/* Below 1100px wide, stack everything in one column */
 @media (max-width: 1100px) {
   .topbar,
   .page-header {
@@ -543,17 +488,16 @@ h2 {
 
   .filters {
     flex-wrap: wrap;
-    flex-shrink: 1; /* on small screens the filters are allowed to wrap */
+    flex-shrink: 1;
   }
 
   .grid {
     grid-template-columns: 1fr;
   }
 
-  /* Without this, wide content (like the table) stretches the card off-screen */
   .card {
     min-width: 0;
-    overflow-x: auto; /* the table can be scrolled sideways inside its card */
+    overflow-x: auto;
   }
 
   .stat-number {
@@ -561,7 +505,6 @@ h2 {
   }
 }
 
-/* Phones: smaller gaps and text, and let rows wrap onto 2 lines */
 @media (max-width: 700px) {
   .topbar,
   .page {
