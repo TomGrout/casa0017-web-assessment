@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rain To Spill – sewage spills on the River Lea</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/src/overview.css" />
   </head>
 
@@ -34,16 +40,19 @@
       <section class="opening">
         <div class="wrap">
           <div class="opening-top">
-            <div>
+            <div class="opening-text">
               <p class="kicker">River Lea, east London</p>
-              <h1>Where does the sewage go after it rains?</h1>
+              <h1>
+                Where does the sewage go
+                <span class="scribble"
+                  >after it rains?<svg viewBox="0 0 300 16" preserveAspectRatio="none" aria-hidden="true">
+                    <path pathLength="1" d="M4 10 C60 3, 120 15, 180 8 S262 5, 296 11" /></svg
+                ></span>
+              </h1>
               <p class="lede">
-                When it rains hard, London's sewers overflow into the River Lea. You would expect
-                the river to carry the sewage out to the Thames. But the bottom end of the Lea is
-                tidal, and when the tide is coming in it can push the sewage back up toward
-                Stratford.
+                Out to the Thames, usually. But when the tide is coming in, it can be pushed back up
+                the river toward Stratford.
               </p>
-              <p class="lede">We built this site to show when that happens.</p>
             </div>
 
             <figure class="hero-map">
@@ -52,20 +61,49 @@
                 role="img"
                 aria-label="Sketch map. The River Lea runs down past Walthamstow, Lea Bridge and Stratford, becomes Bow Creek, and joins the Thames near Silvertown. A rising tide pushes water back up Bow Creek."
               >
-                <path class="map-thames" d="M-10 338 C110 326, 190 344, 262 324 S380 312, 450 328" />
+                <path
+                  class="map-thames"
+                  pathLength="1"
+                  d="M-10 338 C110 326, 190 344, 262 324 S380 312, 450 328"
+                />
                 <path
                   class="map-lea"
+                  pathLength="1"
+                  d="M150 10 C140 60, 176 80, 166 120 S150 178, 184 204 S216 250, 232 272 S252 302, 262 322"
+                />
+                <path
+                  class="map-flow"
+                  d="M-10 338 C110 326, 190 344, 262 324 S380 312, 450 328"
+                />
+                <path
+                  class="map-flow"
                   d="M150 10 C140 60, 176 80, 166 120 S150 178, 184 204 S216 250, 232 272 S252 302, 262 322"
                 />
                 <text class="map-water" x="138" y="34" text-anchor="end">River Lea</text>
                 <text class="map-water" x="20" y="366">River Thames</text>
                 <text class="map-water" x="436" y="292" text-anchor="end">to the sea →</text>
 
+                <g class="map-rain">
+                  <path
+                    class="map-cloud"
+                    d="M350 32 A8 8 0 0 1 352 17 A12 12 0 0 1 374 12 A9 9 0 0 1 390 18 A7 7 0 0 1 392 32 Z"
+                  />
+                  <line x1="358" y1="38" x2="356" y2="45" />
+                  <line x1="368" y1="38" x2="366" y2="45" />
+                  <line x1="378" y1="38" x2="376" y2="45" />
+                  <line x1="388" y1="38" x2="386" y2="45" />
+                </g>
+
                 <path class="map-push" d="M292 300 C280 270, 262 250, 236 228" />
                 <path class="map-push-head" d="M239 237 L236 228 L246 230" />
-                <text class="map-push-label" x="292" y="258">rising tide</text>
-                <text class="map-push-label" x="292" y="274">pushes it back</text>
+                <text class="map-push-label" x="290" y="256">rising tide</text>
+                <text class="map-push-label" x="290" y="274">pushes it back</text>
 
+                <g class="map-rings">
+                  <circle cx="167" cy="164" r="5" />
+                  <circle cx="195" cy="199" r="5" />
+                  <circle cx="205" cy="244" r="5" />
+                </g>
                 <circle class="map-outfall" cx="167" cy="164" r="5" />
                 <circle class="map-outfall" cx="195" cy="199" r="5" />
                 <circle class="map-outfall" cx="205" cy="244" r="5" />
@@ -89,7 +127,7 @@
               <figcaption>
                 <span class="key"><span class="key-outfall"></span>Outfall</span>
                 <span class="key"><span class="key-gauge"></span>Gauge we read</span>
-                <span class="key-note">Sketch, not to scale</span>
+                <span class="key-note">sketch, not to scale</span>
               </figcaption>
             </figure>
           </div>
@@ -99,7 +137,7 @@
 
             <div class="reading">
               <p class="reading-number is-empty" id="rain-now">--</p>
-              <p class="reading-label">rain at Walthamstow in the last 24 hours</p>
+              <p class="reading-label">rain in the last 24 hours</p>
             </div>
 
             <div class="reading">
@@ -115,211 +153,152 @@
             <p class="live-message" id="live-message"></p>
           </div>
 
-          <a class="follow-link" href="#steps">See how it happens ↓</a>
+          <a class="follow-link" href="#rain">Follow the water ↓</a>
         </div>
       </section>
 
-      <section class="flow-section" id="steps">
-        <div class="wrap">
-          <h2>What this site shows</h2>
-          <p class="flow-intro">
-            Three things happen, one after the other. The rest of this page goes through them in
-            order.
-          </p>
-
-          <div class="flow">
-            <a class="flow-step" href="#rain">
-              <svg class="sketch" viewBox="0 0 120 80" aria-hidden="true">
-                <path
-                  class="ink"
-                  d="M30 38 A9 9 0 0 1 32 21 A13 13 0 0 1 56 15 A10 10 0 0 1 74 22 A8 8 0 0 1 76 38 Z"
-                />
-                <line class="rain" x1="38" y1="44" x2="35" y2="53" />
-                <line class="rain" x1="50" y1="44" x2="47" y2="53" />
-                <line class="rain" x1="62" y1="44" x2="59" y2="53" />
-                <line class="rain" x1="72" y1="44" x2="69" y2="53" />
-                <rect class="ink" x="16" y="60" width="88" height="15" rx="7.5" />
-                <rect class="water-fill" x="20" y="66" width="80" height="6" rx="3" />
-              </svg>
-              <p class="flow-number">Step 1</p>
-              <h3>Rain fills the sewers</h3>
-              <p>Rain from roofs and roads runs into the same pipes as sewage.</p>
-              <p class="flow-where">Measured at Walthamstow</p>
-            </a>
-
-            <svg class="flow-arrow" viewBox="0 0 40 24" aria-hidden="true">
-              <path d="M3 13 Q20 7 35 12 M28 6 L36 12 L29 18" />
+      <section class="chapter-section" id="rain">
+        <div class="wrap chapter">
+          <div class="chapter-label" data-reveal>
+            <svg class="sketch sketch-rain" viewBox="0 0 120 80" aria-hidden="true">
+              <path
+                class="ink"
+                d="M30 38 A9 9 0 0 1 32 21 A13 13 0 0 1 56 15 A10 10 0 0 1 74 22 A8 8 0 0 1 76 38 Z"
+              />
+              <line class="rain" x1="38" y1="44" x2="35" y2="53" />
+              <line class="rain" x1="50" y1="44" x2="47" y2="53" />
+              <line class="rain" x1="62" y1="44" x2="59" y2="53" />
+              <line class="rain" x1="72" y1="44" x2="69" y2="53" />
+              <rect class="ink" x="16" y="60" width="88" height="15" rx="7.5" />
+              <rect class="water-fill" x="20" y="66" width="80" height="6" rx="3" />
             </svg>
-
-            <a class="flow-step" href="#spill">
-              <svg class="sketch" viewBox="0 0 120 80" aria-hidden="true">
-                <rect class="ink" x="8" y="8" width="78" height="17" rx="8.5" />
-                <rect class="water-fill" x="12" y="12" width="70" height="9" rx="4.5" />
-                <path class="ink" d="M58 25 V41 M68 25 V41" />
-                <circle class="sewage" cx="63" cy="48" r="2.6" />
-                <circle class="sewage" cx="62" cy="55" r="2.2" />
-                <ellipse class="sewage-patch" cx="64" cy="64" rx="13" ry="3.5" />
-                <path class="ink" d="M6 63 q9 -5 18 0 t18 0 t18 0 t18 0 t18 0 t18 0" />
-                <path class="rain" d="M14 73 q9 -4 18 0 t18 0 t18 0 t18 0 t18 0" />
-              </svg>
-              <p class="flow-number">Step 2</p>
-              <h3>An outfall overflows</h3>
-              <p>When the pipes are full, the extra spills into the River Lea.</p>
-              <p class="flow-where">Reported by Thames Water</p>
-            </a>
-
-            <svg class="flow-arrow" viewBox="0 0 40 24" aria-hidden="true">
-              <path d="M3 13 Q20 7 35 12 M28 6 L36 12 L29 18" />
-            </svg>
-
-            <a class="flow-step" href="#tide">
-              <svg class="sketch" viewBox="0 0 120 80" aria-hidden="true">
-                <line class="ink" x1="40" y1="8" x2="40" y2="74" />
-                <line class="ink" x1="35" y1="18" x2="45" y2="18" />
-                <line class="ink" x1="35" y1="30" x2="45" y2="30" />
-                <line class="ink" x1="35" y1="42" x2="45" y2="42" />
-                <line class="ink" x1="35" y1="54" x2="45" y2="54" />
-                <line class="ink" x1="35" y1="66" x2="45" y2="66" />
-                <path class="rain" d="M6 46 q8 -5 16 0 t16 0 t16 0 t16 0" />
-                <path class="ink" d="M84 14 V66 M77 22 L84 13 L91 22 M77 58 L84 67 L91 58" />
-              </svg>
-              <p class="flow-number">Step 3</p>
-              <h3>The tide moves it</h3>
-              <p>The bottom of the Lea is tidal, so the sewage goes where the water goes.</p>
-              <p class="flow-where">Measured at Silvertown</p>
-            </a>
-
-            <svg class="flow-arrow" viewBox="0 0 40 24" aria-hidden="true">
-              <path d="M3 13 Q20 7 35 12 M28 6 L36 12 L29 18" />
-            </svg>
-
-            <div class="flow-ends">
-              <div class="flow-end">
-                <p class="flow-number">Tide going out</p>
-                <h3>Carried out to the Thames →</h3>
-              </div>
-              <div class="flow-end flow-end-bad">
-                <p class="flow-number">Tide coming in</p>
-                <h3>← Pushed back toward Stratford</h3>
-              </div>
-            </div>
+            <p class="chapter-word">Rain</p>
+            <p class="chapter-where">Walthamstow</p>
           </div>
-        </div>
-      </section>
 
-      <div class="wrap story">
-        <section class="chapter" id="rain">
-          <p class="chapter-label">
-            <span class="chapter-step">Step 1</span> Rain <span>Walthamstow</span>
-          </p>
-
-          <div class="chapter-text">
-            <h2>London's sewers carry rain and sewage in the same pipe.</h2>
+          <div class="chapter-text" data-reveal>
+            <h2>Rain and sewage share a pipe.</h2>
             <p>
-              Much of London's sewer network was built in the 1860s and 1870s, and it was designed
-              to take rainwater from roofs and roads in the same pipes as waste from homes. On a dry
-              day all of it flows to the treatment works.
-            </p>
-            <p>
-              Heavy rain fills those pipes. So that sewage doesn't back up into streets and houses,
-              the extra is let out through storm overflows: pipes, called outfalls, that empty
+              London's Victorian sewers carry both. When heavy rain fills them, the extra spills
               straight into the river.
             </p>
-            <a class="chapter-link" href="/">See which outfalls are spilling now →</a>
+            <a class="chapter-link" href="/">See what's spilling now →</a>
           </div>
 
-          <figure class="card figure">
-            <div class="sewer">
-              <p class="sewer-title">Dry day</p>
-              <div class="sewer-ends">
+          <figure class="card figure" data-reveal>
+            <div
+              class="pipe-scene"
+              role="img"
+              aria-label="Rain fills a sewer pipe past the overflow level, and the outfall spills into the River Lea until the water drops again."
+            >
+              <svg class="storm" viewBox="0 0 120 56" aria-hidden="true">
+                <path
+                  class="storm-cloud"
+                  d="M30 34 A9 9 0 0 1 32 17 A13 13 0 0 1 56 11 A10 10 0 0 1 74 18 A8 8 0 0 1 76 34 Z"
+                />
+                <line x1="38" y1="40" x2="35" y2="49" />
+                <line x1="50" y1="40" x2="47" y2="49" />
+                <line x1="62" y1="40" x2="59" y2="49" />
+                <line x1="72" y1="40" x2="69" y2="49" />
+              </svg>
+
+              <div class="sewer-ends" aria-hidden="true">
                 <span>Homes and roads</span>
                 <span>Treatment works →</span>
               </div>
-              <div class="pipe">
+
+              <div class="pipe" aria-hidden="true">
                 <div class="overflow-line"></div>
-                <div class="pipe-water" style="height: 30%"></div>
+                <div class="pipe-water"></div>
               </div>
-              <div class="outfall outfall-closed">
+
+              <div class="below-pipe" aria-hidden="true">
+                <span class="hand-note">- - - overflow level</span>
                 <span class="outfall-pipe"></span>
-                Outfall closed
+                <span class="drips">
+                  <span class="drip"></span>
+                  <span class="drip"></span>
+                  <span class="drip"></span>
+                </span>
+                <span class="hand-note spill-note">spilling!</span>
+              </div>
+
+              <div class="mini-river" aria-hidden="true">
+                <span class="hand-note">River Lea</span>
               </div>
             </div>
-
-            <div class="sewer">
-              <p class="sewer-title">Heavy rain</p>
-              <div class="sewer-ends">
-                <span>Homes and roads</span>
-                <span>Treatment works →</span>
-              </div>
-              <div class="pipe">
-                <div class="overflow-line"></div>
-                <div class="pipe-water" style="height: 100%"></div>
-              </div>
-              <div class="outfall outfall-open">
-                <span class="outfall-pipe"></span>
-                Spilling into the River Lea
-              </div>
-            </div>
-
-            <figcaption>
-              The dashed line is the overflow level. Once the water passes it, the outfall opens.
-            </figcaption>
           </figure>
-        </section>
+        </div>
+      </section>
 
-        <section class="chapter" id="spill">
-          <p class="chapter-label">
-            <span class="chapter-step">Step 2</span> Spill <span>River Lea</span>
-          </p>
+      <section class="chapter-section chapter-dark" id="spill">
+        <div class="wrap chapter">
+          <div class="chapter-label" data-reveal>
+            <svg class="sketch sketch-spill" viewBox="0 0 120 80" aria-hidden="true">
+              <rect class="ink" x="8" y="8" width="78" height="17" rx="8.5" />
+              <rect class="water-fill" x="12" y="12" width="70" height="9" rx="4.5" />
+              <path class="ink" d="M58 25 V41 M68 25 V41" />
+              <circle class="sewage" cx="63" cy="48" r="2.6" />
+              <circle class="sewage" cx="62" cy="55" r="2.2" />
+              <ellipse class="sewage-patch" cx="64" cy="64" rx="13" ry="3.5" />
+              <path class="ink waves" d="M6 63 q9 -5 18 0 t18 0 t18 0 t18 0 t18 0 t18 0" />
+              <path class="rain waves" d="M14 73 q9 -4 18 0 t18 0 t18 0 t18 0 t18 0" />
+            </svg>
+            <p class="chapter-word">Spill</p>
+            <p class="chapter-where">River Lea</p>
+          </div>
 
-          <div class="chapter-text">
-            <h2>Some outfalls spill after very little rain.</h2>
-            <p>
-              Not every spill needs a storm. If the ground is already wet, or the pipes are already
-              full, a light shower can be enough to tip an outfall over.
-            </p>
-            <p>
-              For every spill we record, we add up the rain that fell at Walthamstow in the 24 hours
-              before it started. Put side by side, those totals show which outfalls are the first to
-              go.
-            </p>
+          <div class="chapter-text" data-reveal>
+            <h2>Sometimes a shower is enough.</h2>
+            <p>If the ground is already soaked, it takes very little rain to tip an outfall over.</p>
             <a class="chapter-link" href="/triggers.html">See what sets them off →</a>
           </div>
 
-          <figure class="card card-dark figure">
+          <figure class="figure gauge-figure" id="gauge-figure" data-reveal>
             <div class="stat">
-              <div class="gauge"><div class="gauge-fill" id="gauge-fill"></div></div>
+              <div class="gauge-wrap" aria-hidden="true">
+                <span class="gauge-drop"></span>
+                <span class="gauge-drop"></span>
+                <span class="gauge-drop"></span>
+                <div class="gauge"><div class="gauge-fill" id="gauge-fill"></div></div>
+              </div>
               <div>
                 <p class="stat-label">Least rain before a spill</p>
-                <p class="stat-number" id="lowest-rain">-- mm</p>
+                <p class="stat-number is-empty" id="lowest-rain">-- mm</p>
               </div>
             </div>
-            <figcaption id="lowest-rain-text">
-              Total rain at Walthamstow in the 24 hours before the spill started.
-            </figcaption>
+            <figcaption id="lowest-rain-text">Rain in the 24 hours before a spill.</figcaption>
           </figure>
-        </section>
+        </div>
+      </section>
 
-        <section class="chapter" id="tide">
-          <p class="chapter-label">
-            <span class="chapter-step">Step 3</span> Tide <span>Silvertown</span>
-          </p>
+      <section class="chapter-section" id="tide">
+        <div class="wrap chapter">
+          <div class="chapter-label" data-reveal>
+            <svg class="sketch sketch-tide" viewBox="0 0 120 80" aria-hidden="true">
+              <line class="ink" x1="40" y1="8" x2="40" y2="74" />
+              <line class="ink" x1="35" y1="18" x2="45" y2="18" />
+              <line class="ink" x1="35" y1="30" x2="45" y2="30" />
+              <line class="ink" x1="35" y1="42" x2="45" y2="42" />
+              <line class="ink" x1="35" y1="54" x2="45" y2="54" />
+              <line class="ink" x1="35" y1="66" x2="45" y2="66" />
+              <path class="rain tide-line" d="M6 46 q8 -5 16 0 t16 0 t16 0 t16 0" />
+              <path class="ink" d="M84 14 V66 M77 22 L84 13 L91 22 M77 58 L84 67 L91 58" />
+            </svg>
+            <p class="chapter-word">Tide</p>
+            <p class="chapter-where">Silvertown</p>
+          </div>
 
-          <div class="chapter-text">
-            <h2>Then the tide decides where it goes.</h2>
+          <div class="chapter-text" data-reveal>
+            <h2>Then the tide decides.</h2>
             <p>
-              The bottom end of the Lea, Bow Creek, is tidal. Twice a day the Thames rises and
-              pushes water up the creek, and twice a day it falls and draws it back out.
-            </p>
-            <p>
-              Sewage that spills on a falling tide is carried out to the Thames. Sewage that spills
-              on a rising tide can be pushed back upstream, into the channels and canal basins around
-              Stratford. A map of spills can't show this, so this is what we set out to measure.
+              Twice a day the Thames pushes up Bow Creek. If an outfall spills while the tide is
+              rising, the sewage is pushed back toward Stratford.
             </p>
             <a class="chapter-link" href="/tide.html">See where it goes →</a>
           </div>
 
-          <figure class="card figure">
+          <figure class="card figure" data-reveal>
             <div class="tide-buttons" role="group" aria-label="Choose the tide">
               <button class="tide-button" data-tide="falling" aria-pressed="true">
                 Falling tide <span class="now-tag">now</span>
@@ -345,40 +324,37 @@
             </div>
 
             <figcaption id="tide-caption">
-              <strong>Falling tide.</strong> The creek drains into the Thames, so a spill is carried
-              away from Stratford.
+              <strong>Falling tide.</strong> Carried out to the Thames.
             </figcaption>
           </figure>
-        </section>
-      </div>
+        </div>
+      </section>
 
       <section class="how">
         <div class="wrap">
           <h2>How we know</h2>
-          <p class="how-intro">
-            Every 15 minutes our server reads four public sources and saves what it finds.
-          </p>
+          <p class="how-intro">We check four public sources every 15 minutes.</p>
 
           <dl class="sources">
             <div>
               <dt>Spills</dt>
-              <dd>Thames Water: every outfall on the Lea, Bow Creek and Thames</dd>
+              <dd>Thames Water</dd>
             </div>
             <div>
               <dt>Rain</dt>
-              <dd>Environment Agency rain gauge at Walthamstow</dd>
+              <dd>Walthamstow gauge</dd>
             </div>
             <div>
               <dt>River level</dt>
-              <dd>Environment Agency river gauge at Lea Bridge</dd>
+              <dd>Lea Bridge gauge</dd>
             </div>
             <div>
               <dt>Tide</dt>
-              <dd>Environment Agency tide gauge at Silvertown</dd>
+              <dd>Silvertown gauge</dd>
             </div>
           </dl>
 
-          <a class="chapter-link" href="/method.html">Read the method and sources →</a>
+          <a class="chapter-link" href="/method.html">Read the method →</a>
         </div>
       </section>
     </main>

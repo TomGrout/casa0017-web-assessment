@@ -4,11 +4,64 @@ const API_URL = 'http://localhost:3000/api'
 
 const GAUGE_MAX_MM = 30
 
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+let lowestRain = null
+let gaugeSeen = false
+
+document.documentElement.classList.add('js')
+
+const revealObserver = new IntersectionObserver(
+  function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible')
+        revealObserver.unobserve(entry.target)
+        if (entry.target.id === 'gauge-figure') {
+          gaugeSeen = true
+          showLowestRain()
+        }
+      }
+    })
+  },
+  { threshold: 0.2 }
+)
+
+document.querySelectorAll('[data-reveal]').forEach(function (el) {
+  revealObserver.observe(el)
+})
+
 const TIDE_CAPTIONS = {
-  falling:
-    '<strong>Falling tide.</strong> The creek drains into the Thames, so a spill is carried away from Stratford.',
-  rising:
-    '<strong>Rising tide.</strong> The Thames pushes up Bow Creek, so a spill is carried back toward Stratford.',
+  falling: '<strong>Falling tide.</strong> Carried out to the Thames.',
+  rising: '<strong>Rising tide.</strong> Pushed back toward Stratford.',
+}
+
+function showLowestRain() {
+  if (lowestRain === null || !gaugeSeen) {
+    return
+  }
+
+  const percent = Math.min(lowestRain / GAUGE_MAX_MM, 1) * 100
+  $('#gauge-fill').css('height', percent + '%')
+  $('#lowest-rain').removeClass('is-empty')
+
+  if (reduceMotion) {
+    $('#lowest-rain').text(lowestRain + ' mm')
+    return
+  }
+
+  $({ value: 0 }).animate(
+    { value: lowestRain },
+    {
+      duration: 1600,
+      step: function (now) {
+        $('#lowest-rain').text(now.toFixed(1) + ' mm')
+      },
+      complete: function () {
+        $('#lowest-rain').text(lowestRain + ' mm')
+      },
+    }
+  )
 }
 
 function showTide(tide) {
@@ -66,27 +119,20 @@ $.getJSON(API_URL + '/status')
   })
   .fail(function () {
     $('#last-updated').text('Live data unavailable')
-    $('#live-message').text(
-      "Live readings aren't available right now. The rest of the page still works, so read on, or try again in a few minutes."
-    )
+    $('#live-message').text("Live readings aren't available right now. Try again in a few minutes.")
   })
 
 $.getJSON(API_URL + '/thresholds').done(function (response) {
   const outfalls = response.data
 
   if (outfalls.length === 0) {
-    $('#lowest-rain-text').text(
-      "We haven't recorded a spill yet. This number will appear after the first one."
-    )
+    $('#lowest-rain-text').text('No spills recorded yet. This fills in after the first one.')
     return
   }
 
   const first = outfalls[0]
-  const mm = Number(first.minRain24hMm)
-  $('#lowest-rain').text(mm + ' mm')
-
-  const percent = Math.min(mm / GAUGE_MAX_MM, 1) * 100
-  $('#gauge-fill').css('height', percent + '%')
+  lowestRain = Number(first.minRain24hMm)
+  showLowestRain()
 
   let totalSpills = 0
   $.each(outfalls, function (i, outfall) {
@@ -94,10 +140,10 @@ $.getJSON(API_URL + '/thresholds').done(function (response) {
   })
 
   $('#lowest-rain-text').text(
-    'Rain at Walthamstow in the 24 hours before a spill at ' +
+    'Rain before a spill at ' +
       first.locationName +
-      ', the lowest of the ' +
+      '. The lowest of ' +
       totalSpills +
-      ' spills we have recorded.'
+      " spills we've recorded."
   )
 })
