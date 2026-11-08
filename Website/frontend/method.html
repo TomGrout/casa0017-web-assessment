@@ -1,21 +1,4 @@
 <!doctype html>
-<!--
-  =====================================================================
-  PAGE: "Method & sources"  (method.html)
-  =====================================================================
-  Explains how the site works, which APIs (live data) we use, and lists
-  all the research we used (the bibliography).
-
-  This page is only HTML + CSS. It has no data to load, so it needs no
-  JavaScript.
-    1. method.html        <- this file: the STRUCTURE and all the text
-    2. src/method.css     <- the STYLE (colours, sizes, layout)
-
-  To add a new API:       copy one <div class="card api-card"> ... </div> block
-  To add a new reference: copy one <li> ... </li> in the References list
-                          (keep the list in alphabetical order - Harvard style)
-  =====================================================================
--->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -23,13 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Method &amp; sources – Rain To Spill</title>
 
-    <!-- Our styles for this page -->
     <link rel="stylesheet" href="/src/method.css" />
   </head>
 
   <body>
-    <!-- ===================== TOP NAVIGATION BAR ===================== -->
-    <!-- Same bar as the other pages. The link for the current page gets class="active". -->
     <header class="topbar">
       <a class="logo" href="/">
         <span class="logo-drop">💧</span>
@@ -38,7 +18,6 @@
 
       <nav class="nav-links">
         <a href="/">Overview</a>
-        <!-- TODO: point this to the live map page once someone builds it -->
         <a href="/">Live map</a>
         <a href="/triggers.html">What sets them off</a>
         <a href="/tide.html">Where it goes</a>
@@ -47,7 +26,6 @@
     </header>
 
     <main class="page">
-      <!-- ===================== PAGE TITLE ===================== -->
       <section class="page-header">
         <h1>Method &amp; sources</h1>
         <p class="intro">
@@ -56,9 +34,6 @@
         </p>
       </section>
 
-      <!-- ===================== 1. HOW IT WORKS ===================== -->
-      <!-- Written from what the backend code does (Website/backend).
-           Backend team: please check this is still correct if you change how the data works. -->
       <section class="section">
         <h2>How it works</h2>
 
@@ -101,7 +76,6 @@
         </ol>
       </section>
 
-      <!-- ===================== 2. LIVE DATA (APIs) ===================== -->
       <section class="section">
         <h2>Live data we use</h2>
         <p class="section-intro">
@@ -109,7 +83,6 @@
         </p>
 
         <div class="card-grid">
-          <!-- One card per API. Copy a whole <div class="card api-card"> block to add another. -->
           <div class="card api-card">
             <p class="provider">Thames Water</p>
             <h3>Open Data API: storm discharges</h3>
@@ -144,7 +117,6 @@
             >
           </div>
 
-          <!-- NOTE: Open-Meteo and RainViewer are not in the bibliography yet - add them to the References below. -->
           <div class="card api-card">
             <p class="provider">Open-Meteo</p>
             <h3>Weather forecast API</h3>
@@ -163,7 +135,6 @@
         </div>
       </section>
 
-      <!-- ===================== 3. HISTORICAL DATA ===================== -->
       <section class="section">
         <h2>Historical data</h2>
 
@@ -183,8 +154,6 @@
         </div>
       </section>
 
-      <!-- ===================== 4. REFERENCES (bibliography) ===================== -->
-      <!-- Harvard style, in alphabetical order. Each reference is one <li>. -->
       <section class="section">
         <h2>References</h2>
 
