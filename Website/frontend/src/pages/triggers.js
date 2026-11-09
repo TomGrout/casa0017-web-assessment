@@ -107,7 +107,7 @@ function siteKey(name, point) {
   return name.toUpperCase() + '|' + point[0].toFixed(4) + ',' + point[1].toFixed(4)
 }
 
-function filteredEvents() {
+function filteredEvents(anySite) {
   return state.events.filter(function (e) {
     if (state.river !== 'all' && e.river !== state.river) {
       return false
@@ -115,7 +115,7 @@ function filteredEvents() {
     if (state.wetOnly && !(e.priorRain >= WET_PRIOR_MM)) {
       return false
     }
-    return state.site === 'all' || e.site === state.site
+    return anySite || state.site === 'all' || e.site === state.site
   })
 }
 
@@ -223,18 +223,22 @@ function updateMap(bySite) {
     return
   }
 
+  // Keep the other sites on the map, greyed out, so another one can be clicked
+  const mapRows = state.site === 'all' ? bySite : summarise(filteredEvents(true))
   const features = []
-  bySite.forEach(function (row) {
+  mapRows.forEach(function (row) {
     const site = state.sites.get(row.site)
     features.push({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: site.coordinates },
       properties: {
+        key: site.key,
         name: site.name,
         pipes: site.pipes,
         spilling: site.isDischarging,
         spills: row.spills,
         selected: row.selected,
+        dimmed: state.site !== 'all' && site.key !== state.site,
         lowestRain: row.lowestRain,
       },
     })
@@ -432,7 +436,7 @@ function startMap() {
       id: 'outfalls-quiet',
       type: 'circle',
       source: 'outfalls',
-      filter: ['==', ['get', 'selected'], 0],
+      filter: ['any', ['==', ['get', 'selected'], 0], ['get', 'dimmed']],
       paint: {
         'circle-radius': 3,
         'circle-color': '#a0acb8',
@@ -445,7 +449,7 @@ function startMap() {
       id: 'outfalls-selected',
       type: 'circle',
       source: 'outfalls',
-      filter: ['>', ['get', 'selected'], 0],
+      filter: ['all', ['>', ['get', 'selected'], 0], ['!', ['get', 'dimmed']]],
       paint: {
         'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'selected']], 1, 3.5, 12, 10],
         'circle-color': '#e9a23b',
@@ -484,6 +488,13 @@ function startMap() {
         if (p.spilling) {
           lines.push($('<span class="popup-spilling">').text('Spilling now'))
         }
+        lines.push(
+          $('<span class="popup-hint">').text(
+            p.key === state.site
+              ? 'Click to show all outfalls again'
+              : 'Click to show only this outfall'
+          )
+        )
         popup
           .setLngLat(e.features[0].geometry.coordinates)
           .setDOMContent($('<div class="popup">').append(lines)[0])
@@ -492,6 +503,11 @@ function startMap() {
       map.on('mouseleave', layer, function () {
         map.getCanvas().style.cursor = ''
         popup.remove()
+      })
+      map.on('click', layer, function (e) {
+        const key = e.features[0].properties.key
+        popup.remove()
+        selectSite(state.site === key ? 'all' : key)
       })
     })
   })
@@ -592,9 +608,14 @@ $('#wet-only').on('change', function () {
   render(true)
 })
 
-$('#outfall-select').on('change', function () {
-  state.site = this.value
+function selectSite(key) {
+  state.site = key
+  $('#outfall-select').val(key)
   render(true)
+}
+
+$('#outfall-select').on('change', function () {
+  selectSite(this.value)
   fitMap()
 })
 
