@@ -232,6 +232,13 @@ h2 {
   color: var(--text);
 }
 
+.selection-box.flip .selection-label {
+  left: auto;
+  right: 100%;
+  margin: 0 12px 0 0;
+  text-align: right;
+}
+
 .empty-message {
   color: var(--muted);
   text-align: center;
@@ -277,15 +284,38 @@ h2 {
   margin-top: 6px;
 }
 
-.map-placeholder {
+.map {
   height: 340px;
   border-radius: 10px;
+  overflow: hidden;
   background: #e3e8ed;
-  border: 2px dashed var(--border);
+}
+
+.map-error {
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px dashed var(--border);
   color: var(--muted);
+}
+
+.popup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.popup strong {
+  color: var(--navy);
+}
+
+.popup-spilling {
+  margin-top: 4px;
+  font-weight: 700;
+  color: #8a4f00;
 }
 
 .link-button {
@@ -315,6 +345,10 @@ h2 {
 .ranking td {
   padding: 14px 8px;
   border-bottom: 1px solid #edf0f3;
+}
+
+.ranking td:nth-child(n + 3) {
+  white-space: nowrap;
 }
 
 .ranking tr.top-row {
@@ -386,8 +420,20 @@ h2 {
   left: 3px;
   right: 3px;
   bottom: 3px;
+  height: 0;
+  max-height: calc(100% - 6px);
   border-radius: 10px;
   background: var(--cyan);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gauge-fill {
+    transition: height 0.6s ease-out;
+  }
+
+  .selection-box {
+    transition: width 0.1s linear;
+  }
 }
 
 .stat-label {
@@ -399,6 +445,10 @@ h2 {
   font-weight: 800;
   line-height: 1;
   color: var(--cyan);
+}
+
+.stat-number.is-empty {
+  color: #4b5d72;
 }
 
 .stat-text {
