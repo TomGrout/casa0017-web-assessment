@@ -58,9 +58,25 @@ export async function getSummary(req, res, next) {
 
 export async function getScatter(req, res, next) {
   try {
-    const { river, limit } = req.query;
+    const { river, bbox, limit } = req.query;
+
+    let box = null;
+    if (bbox) {
+      const [minLng, minLat, maxLng, maxLat] = String(bbox).split(',').map(Number);
+      const valid = [minLng, minLat, maxLng, maxLat].every(Number.isFinite)
+        && minLng < maxLng && minLat < maxLat;
+      if (!valid) {
+        return res.status(400).json({
+          success: false,
+          error: 'bbox must be minLng,minLat,maxLng,maxLat'
+        });
+      }
+      box = { minLng, minLat, maxLng, maxLat };
+    }
+
     const data = await getScatterData({
       river: river || null,
+      bbox: box,
       limit: limit ? parseInt(limit, 10) : 1000
     });
     res.json({ data });

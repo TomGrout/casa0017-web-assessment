@@ -175,7 +175,7 @@ export async function getSummaryStats() {
  * Get spill events as scatter data for visualization
  */
 export async function getScatterData(options = {}) {
-  const { river = null, limit = 1000 } = options;
+  const { river = null, bbox = null, limit = 1000 } = options;
 
   let whereSql = 'WHERE s.rain_24h_mm IS NOT NULL AND s.end_ts IS NOT NULL';
   const params = [];
@@ -183,6 +183,11 @@ export async function getScatterData(options = {}) {
   if (river) {
     whereSql += ' AND o.receiving_watercourse REGEXP ?';
     params.push(river);
+  }
+
+  if (bbox) {
+    whereSql += ' AND o.lng BETWEEN ? AND ? AND o.lat BETWEEN ? AND ?';
+    params.push(bbox.minLng, bbox.maxLng, bbox.minLat, bbox.maxLat);
   }
 
   params.push(limit);
