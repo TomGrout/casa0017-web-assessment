@@ -347,6 +347,12 @@ h2 {
   white-space: nowrap;
 }
 
+.pipes {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+}
+
 .ranking tr.top-row {
   background: #fdf3e6;
 }

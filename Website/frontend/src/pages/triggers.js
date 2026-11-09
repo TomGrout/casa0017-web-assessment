@@ -20,13 +20,14 @@ const HOURS_MAX = 20
 const DEFAULT_RAIN_MM = 4
 const WET_PRIOR_MM = 2
 const TOP_ROWS = 5
+const LOAD_ATTEMPTS = 3
 
 const state = {
   events: [],
-  outfalls: new Map(),
+  sites: new Map(),
   river: 'all',
   wetOnly: false,
-  outfall: 'all',
+  site: 'all',
   maxRain: DEFAULT_RAIN_MM,
   showAll: false,
 }
@@ -101,6 +102,11 @@ function riverOf(label, point) {
   return insidePolygon(point, LEA_CATCHMENT) ? 'lea' : 'thames'
 }
 
+// Some sites have several overflow pipes, each with its own permit number
+function siteKey(name, point) {
+  return name.toUpperCase() + '|' + point[0].toFixed(4) + ',' + point[1].toFixed(4)
+}
+
 function filteredEvents() {
   return state.events.filter(function (e) {
     if (state.river !== 'all' && e.river !== state.river) {
@@ -109,7 +115,7 @@ function filteredEvents() {
     if (state.wetOnly && !(e.priorRain >= WET_PRIOR_MM)) {
       return false
     }
-    return state.outfall === 'all' || e.permit === state.outfall
+    return state.site === 'all' || e.site === state.site
   })
 }
 
@@ -118,10 +124,10 @@ function isSelected(e) {
 }
 
 function summarise(events) {
-  const byOutfall = new Map()
+  const bySite = new Map()
   events.forEach(function (e) {
-    const row = byOutfall.get(e.permit) || {
-      permit: e.permit,
+    const row = bySite.get(e.site) || {
+      site: e.site,
       name: e.name,
       river: e.river,
       spills: 0,
@@ -131,9 +137,9 @@ function summarise(events) {
     row.spills = row.spills + 1
     row.selected = row.selected + (isSelected(e) ? 1 : 0)
     row.lowestRain = Math.min(row.lowestRain, e.rain24h)
-    byOutfall.set(e.permit, row)
+    bySite.set(e.site, row)
   })
-  return byOutfall
+  return bySite
 }
 
 function drawScatter() {
@@ -148,6 +154,9 @@ function drawScatter() {
   ctx.scale(ratio, ratio)
   ctx.clearRect(0, 0, width, height)
 
+  const crowded = points.length > 1000
+  const radius = crowded ? 2.5 : 4
+
   const xy = function (e) {
     return [
       Math.min(e.rain24h / RAIN_MAX_MM, 1) * width,
@@ -155,24 +164,24 @@ function drawScatter() {
     ]
   }
 
-  ctx.fillStyle = 'rgba(160, 172, 184, 0.45)'
+  ctx.fillStyle = crowded ? 'rgba(140, 154, 168, 0.3)' : 'rgba(150, 163, 176, 0.5)'
   points.forEach(function (e) {
     if (!isSelected(e)) {
       const [x, y] = xy(e)
       ctx.beginPath()
-      ctx.arc(x, y, 4, 0, Math.PI * 2)
+      ctx.arc(x, y, radius, 0, Math.PI * 2)
       ctx.fill()
     }
   })
 
-  ctx.fillStyle = '#e9a23b'
-  ctx.strokeStyle = 'rgba(58, 42, 16, 0.7)'
-  ctx.lineWidth = 1
+  ctx.fillStyle = crowded ? 'rgba(233, 162, 59, 0.75)' : '#e9a23b'
+  ctx.strokeStyle = 'rgba(58, 42, 16, 0.5)'
+  ctx.lineWidth = crowded ? 0.5 : 1
   points.forEach(function (e) {
     if (isSelected(e)) {
       const [x, y] = xy(e)
       ctx.beginPath()
-      ctx.arc(x, y, 4.5, 0, Math.PI * 2)
+      ctx.arc(x, y, radius + 0.5, 0, Math.PI * 2)
       ctx.fill()
       ctx.stroke()
     }
@@ -203,46 +212,44 @@ function updateSelection(events) {
   )
 }
 
-function updateMap(byOutfall) {
+function updateMap(bySite) {
   let withSelected = 0
-  byOutfall.forEach(function (row) {
+  bySite.forEach(function (row) {
     withSelected = withSelected + (row.selected > 0 ? 1 : 0)
   })
-  $('#map-count').text(withSelected + ' of ' + plural(byOutfall.size, 'outfall'))
+  $('#map-count').text(withSelected + ' of ' + plural(bySite.size, 'outfall'))
 
   if (!map || !map.getSource('outfalls')) {
     return
   }
 
   const features = []
-  state.outfalls.forEach(function (o) {
-    if (state.river !== 'all' && o.river !== state.river) {
-      return
-    }
-    const row = byOutfall.get(o.permit)
+  bySite.forEach(function (row) {
+    const site = state.sites.get(row.site)
     features.push({
       type: 'Feature',
-      geometry: { type: 'Point', coordinates: o.coordinates },
+      geometry: { type: 'Point', coordinates: site.coordinates },
       properties: {
-        name: o.name,
-        spilling: o.isDischarging,
-        spills: row ? row.spills : 0,
-        selected: row ? row.selected : 0,
-        lowestRain: row ? row.lowestRain : null,
+        name: site.name,
+        pipes: site.pipes,
+        spilling: site.isDischarging,
+        spills: row.spills,
+        selected: row.selected,
+        lowestRain: row.lowestRain,
       },
     })
   })
   map.getSource('outfalls').setData({ type: 'FeatureCollection', features: features })
 }
 
-function rankOutfalls(byOutfall) {
-  return Array.from(byOutfall.values()).sort(function (a, b) {
+function rankSites(bySite) {
+  return Array.from(bySite.values()).sort(function (a, b) {
     return a.lowestRain - b.lowestRain || b.spills - a.spills
   })
 }
 
-function updateRanking(byOutfall) {
-  const rows = rankOutfalls(byOutfall)
+function updateRanking(bySite) {
+  const rows = rankSites(bySite)
 
   const $body = $('#ranking-body').empty()
   if (rows.length === 0) {
@@ -255,14 +262,17 @@ function updateRanking(byOutfall) {
 
   const shown = state.showAll ? rows : rows.slice(0, TOP_ROWS)
   shown.forEach(function (row, i) {
-    const outfall = state.outfalls.get(row.permit)
-    const spilling = outfall ? outfall.isDischarging : false
+    const site = state.sites.get(row.site)
     const barWidth = Math.min(row.lowestRain / RAIN_MAX_MM, 1) * 100
+    const $name = $('<td>').text(row.name)
+    if (site.pipes > 1) {
+      $name.append($('<span class="pipes">').text(site.pipes + ' overflow pipes'))
+    }
 
     $('<tr>')
       .toggleClass('top-row', i === 0)
       .append($('<td>').text(i + 1))
-      .append($('<td>').text(row.name))
+      .append($name)
       .append($('<td>').text(RIVER_NAMES[row.river]))
       .append(
         $('<td>')
@@ -278,8 +288,8 @@ function updateRanking(byOutfall) {
       .append(
         $('<td>').append(
           $('<span class="badge">')
-            .addClass(spilling ? 'badge-spilling' : 'badge-ok')
-            .text(spilling ? 'Spilling now' : 'Not spilling')
+            .addClass(site.isDischarging ? 'badge-spilling' : 'badge-ok')
+            .text(site.isDischarging ? 'Spilling now' : 'Not spilling')
         )
       )
       .appendTo($body)
@@ -290,7 +300,7 @@ function updateRanking(byOutfall) {
     .text(state.showAll ? 'Show top ' + TOP_ROWS : 'See all ' + rows.length + ' outfalls')
 }
 
-function updateStat(events, byOutfall) {
+function updateStat(events, bySite) {
   if (events.length === 0) {
     $('#stat-number').text('-- mm').addClass('is-empty')
     $('#gauge-fill').css('height', 0)
@@ -298,18 +308,18 @@ function updateStat(events, byOutfall) {
     return
   }
 
-  const top = rankOutfalls(byOutfall)[0]
+  const top = rankSites(bySite)[0]
   const lowest = events
     .filter(function (e) {
-      return e.permit === top.permit && e.rain24h === top.lowestRain
+      return e.site === top.site && e.rain24h === top.lowestRain
     })
     .reduce(function (a, b) {
       return b.start > a.start ? b : a
     })
   const selected = events.filter(isSelected)
-  let outfallsInSelection = 0
-  byOutfall.forEach(function (row) {
-    outfallsInSelection = outfallsInSelection + (row.selected > 0 ? 1 : 0)
+  let sitesInSelection = 0
+  bySite.forEach(function (row) {
+    sitesInSelection = sitesInSelection + (row.selected > 0 ? 1 : 0)
   })
 
   $('#stat-number').text(formatMm(lowest.rain24h)).removeClass('is-empty')
@@ -322,14 +332,14 @@ function updateStat(events, byOutfall) {
       '. Your selection holds ' +
       plural(selected.length, 'spill') +
       ' from ' +
-      plural(outfallsInSelection, 'outfall') +
+      plural(sitesInSelection, 'outfall') +
       '.'
   )
 }
 
 function render(newFilters) {
   const events = filteredEvents()
-  const byOutfall = summarise(events)
+  const bySite = summarise(events)
 
   if (newFilters) {
     points = events
@@ -340,16 +350,16 @@ function render(newFilters) {
     .toggle(events.length === 0)
 
   updateSelection(events)
-  updateMap(byOutfall)
-  updateRanking(byOutfall)
-  updateStat(events, byOutfall)
+  updateMap(bySite)
+  updateRanking(bySite)
+  updateStat(events, bySite)
 }
 
 function fillOutfallSelect() {
   const named = new Map()
   state.events.forEach(function (e) {
     if (state.river === 'all' || e.river === state.river) {
-      named.set(e.permit, e.name)
+      named.set(e.site, e.name)
     }
   })
 
@@ -367,16 +377,9 @@ function fillOutfallSelect() {
 }
 
 function visibleBounds() {
-  const withSpills = new Set(
-    filteredEvents().map(function (e) {
-      return e.permit
-    })
-  )
   const bounds = new maplibregl.LngLatBounds()
-  state.outfalls.forEach(function (o) {
-    if (withSpills.has(o.permit)) {
-      bounds.extend(o.coordinates)
-    }
+  summarise(filteredEvents()).forEach(function (row) {
+    bounds.extend(state.sites.get(row.site).coordinates)
   })
   return bounds
 }
@@ -431,10 +434,10 @@ function startMap() {
       source: 'outfalls',
       filter: ['==', ['get', 'selected'], 0],
       paint: {
-        'circle-radius': ['case', ['>', ['get', 'spills'], 0], 4, 2.5],
+        'circle-radius': 3,
         'circle-color': '#a0acb8',
         'circle-stroke-color': '#ffffff',
-        'circle-stroke-width': 1,
+        'circle-stroke-width': 0.5,
       },
     })
 
@@ -444,10 +447,11 @@ function startMap() {
       source: 'outfalls',
       filter: ['>', ['get', 'selected'], 0],
       paint: {
-        'circle-radius': ['interpolate', ['linear'], ['get', 'selected'], 1, 4, 50, 12],
+        'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'selected']], 1, 3.5, 12, 10],
         'circle-color': '#e9a23b',
+        'circle-opacity': 0.85,
         'circle-stroke-color': '#3a2a10',
-        'circle-stroke-width': 1,
+        'circle-stroke-width': 0.75,
       },
     })
 
@@ -457,7 +461,7 @@ function startMap() {
       source: 'outfalls',
       filter: ['==', ['get', 'spilling'], true],
       paint: {
-        'circle-radius': 10,
+        'circle-radius': 12,
         'circle-color': 'rgba(0,0,0,0)',
         'circle-stroke-color': '#0f1f33',
         'circle-stroke-width': 2,
@@ -472,14 +476,11 @@ function startMap() {
         map.getCanvas().style.cursor = 'pointer'
         const p = e.features[0].properties
         const lines = [$('<strong>').text(p.name)]
-        if (p.spills > 0) {
-          lines.push(
-            $('<span>').text(p.selected + ' of ' + plural(p.spills, 'spill') + ' selected')
-          )
-          lines.push($('<span>').text('Lowest rain: ' + formatMm(Number(p.lowestRain))))
-        } else {
-          lines.push($('<span>').text('No spills for these filters'))
+        if (p.pipes > 1) {
+          lines.push($('<span>').text(p.pipes + ' overflow pipes'))
         }
+        lines.push($('<span>').text(p.selected + ' of ' + plural(p.spills, 'spill') + ' selected'))
+        lines.push($('<span>').text('Lowest rain: ' + formatMm(Number(p.lowestRain))))
         if (p.spilling) {
           lines.push($('<span class="popup-spilling">').text('Spilling now'))
         }
@@ -496,6 +497,83 @@ function startMap() {
   })
 }
 
+function showData(scatterResponse, geojsonResponse) {
+  const permitToSite = new Map()
+
+  geojsonResponse.features.forEach(function (f) {
+    const point = f.geometry.coordinates
+    if (!inLondon(point)) {
+      return
+    }
+    const name = f.properties.locationName.trim().replace(/,$/, '')
+    const key = siteKey(name, point)
+    const site = state.sites.get(key) || {
+      key: key,
+      name: name,
+      river: riverOf(f.properties.river, point),
+      coordinates: point,
+      pipes: 0,
+      isDischarging: false,
+    }
+    site.pipes = site.pipes + 1
+    site.isDischarging = site.isDischarging || f.properties.isDischarging
+    state.sites.set(key, site)
+    permitToSite.set(f.properties.permitNumber, site)
+  })
+
+  scatterResponse.data.forEach(function (row) {
+    const site = permitToSite.get(row.permitNumber)
+    if (!site) {
+      return
+    }
+    state.events.push({
+      site: site.key,
+      name: site.name,
+      river: site.river,
+      rain24h: Number(row.rain24h),
+      priorRain: row.rain48h === null ? null : Number(row.rain48h) - Number(row.rain24h),
+      hours: Number(row.durationHours),
+      start: row.startTime,
+    })
+  })
+
+  const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  $('#last-updated').text('Live, updated ' + time)
+
+  fillOutfallSelect()
+  render(true)
+  startMap()
+}
+
+function showError() {
+  $('#last-updated').text('Live data unavailable')
+  $('#scatter .empty-message').text(
+    "Spill data isn't available right now. Try again in a few minutes."
+  )
+  $('#ranking-body .empty-message').text("Outfall data isn't available right now.")
+  $('#map').addClass('map-error').text('No map data right now.')
+}
+
+// The online database sometimes drops a quiet connection, so try again before giving up
+function loadData(attempt) {
+  $.when(
+    $.getJSON(API_URL + '/analysis/scatter?limit=20000&bbox=' + LONDON_BBOX),
+    $.getJSON(API_URL + '/outfalls/geojson')
+  )
+    .done(function (scatterResponse, geojsonResponse) {
+      showData(scatterResponse[0], geojsonResponse[0])
+    })
+    .fail(function () {
+      if (attempt < LOAD_ATTEMPTS) {
+        setTimeout(function () {
+          loadData(attempt + 1)
+        }, 1500)
+      } else {
+        showError()
+      }
+    })
+}
+
 $('#rain-slider').on('input', function () {
   state.maxRain = Number(this.value)
   render(false)
@@ -503,7 +581,7 @@ $('#rain-slider').on('input', function () {
 
 $('#river-select').on('change', function () {
   state.river = this.value
-  state.outfall = 'all'
+  state.site = 'all'
   fillOutfallSelect()
   render(true)
   fitMap()
@@ -515,7 +593,7 @@ $('#wet-only').on('change', function () {
 })
 
 $('#outfall-select').on('change', function () {
-  state.outfall = this.value
+  state.site = this.value
   render(true)
   fitMap()
 })
@@ -528,7 +606,7 @@ $('#show-all').on('click', function () {
 $('#clear-selection').on('click', function () {
   state.river = 'all'
   state.wetOnly = false
-  state.outfall = 'all'
+  state.site = 'all'
   state.maxRain = DEFAULT_RAIN_MM
   state.showAll = false
   $('#river-select').val('all')
@@ -543,54 +621,4 @@ $('#clear-selection').on('click', function () {
 new ResizeObserver(drawScatter).observe(document.getElementById('scatter-canvas'))
 
 $('#last-updated').text('Loading live data…')
-
-$.when(
-  $.getJSON(API_URL + '/analysis/scatter?limit=20000&bbox=' + LONDON_BBOX),
-  $.getJSON(API_URL + '/outfalls/geojson')
-)
-  .done(function (scatterResponse, geojsonResponse) {
-    geojsonResponse[0].features.forEach(function (f) {
-      const point = f.geometry.coordinates
-      if (!inLondon(point)) {
-        return
-      }
-      state.outfalls.set(f.properties.permitNumber, {
-        permit: f.properties.permitNumber,
-        name: f.properties.locationName,
-        river: riverOf(f.properties.river, point),
-        coordinates: point,
-        isDischarging: f.properties.isDischarging,
-      })
-    })
-
-    scatterResponse[0].data.forEach(function (row) {
-      const outfall = state.outfalls.get(row.permitNumber)
-      if (!outfall) {
-        return
-      }
-      state.events.push({
-        permit: row.permitNumber,
-        name: row.locationName,
-        river: outfall.river,
-        rain24h: Number(row.rain24h),
-        priorRain: row.rain48h === null ? null : Number(row.rain48h) - Number(row.rain24h),
-        hours: Number(row.durationHours),
-        start: row.startTime,
-      })
-    })
-
-    const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-    $('#last-updated').text('Live, updated ' + time)
-
-    fillOutfallSelect()
-    render(true)
-    startMap()
-  })
-  .fail(function () {
-    $('#last-updated').text('Live data unavailable')
-    $('#scatter .empty-message').text(
-      "Spill data isn't available right now. Try again in a few minutes."
-    )
-    $('#ranking-body .empty-message').text("Outfall data isn't available right now.")
-    $('#map').addClass('map-error').text('No map data right now.')
-  })
+loadData(1)
