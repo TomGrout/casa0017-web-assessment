@@ -58,8 +58,8 @@
         <div>
           <h1>What sets them off?</h1>
           <p class="intro">
-            The rain that fell in the 24 hours before each spill on the River Lea. Move the slider
-            under the chart to pick out spills and see which outfalls they came from.
+            The rain that fell in the 24 hours before each spill in London. Move the slider under
+            the chart to pick out spills and see which outfalls they came from.
           </p>
         </div>
 
@@ -73,8 +73,14 @@
             Wet catchment only
           </label>
 
+          <select class="filter-box" id="river-select" aria-label="River">
+            <option value="all">All rivers</option>
+            <option value="lea">River Lea</option>
+            <option value="thames">Thames and others</option>
+          </select>
+
           <select class="filter-box" id="outfall-select" aria-label="Outfall">
-            <option value="all">All Lea outfalls</option>
+            <option value="all">All London outfalls</option>
           </select>
         </div>
       </section>
@@ -95,6 +101,7 @@
             </div>
 
             <div class="plot-area" id="scatter" role="img" aria-label="Scatter chart of spills">
+              <canvas class="scatter-canvas" id="scatter-canvas"></canvas>
               <div class="selection-box" id="selection-box">
                 <div class="selection-label">
                   <strong id="selection-title">-- spills after 4 mm of rain or less</strong>
