@@ -12,18 +12,26 @@
       href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/src/topbar.css" />
     <link rel="stylesheet" href="/src/overview.css" />
   </head>
 
   <body>
     <header class="topbar">
       <a class="logo" href="/">
-        <span class="logo-drop">💧</span>
-        Rain To Spill
+        <svg class="logo-mark" viewBox="0 0 34 30" aria-hidden="true">
+          <path
+            class="cloud"
+            d="M9 14 A3.6 3.6 0 0 1 9.4 6.9 A5.8 5.8 0 0 1 20 4.6 A4.6 4.6 0 0 1 27.3 8.2 A3 3 0 0 1 27.2 14 Z"
+          />
+          <path class="drop" d="M18 16.5 C16 19.6, 15.6 21.6, 18 21.8 C20.4 21.6, 20 19.6, 18 16.5 Z" />
+          <path class="wave" d="M3 26.5 q3.5 -3 7 0 t7 0 t7 0 t7 0" />
+        </svg>
+        <span class="logo-word">Rain <span class="logo-to">to</span> Spill</span>
       </a>
 
-      <nav class="nav-links">
-        <a href="/" class="active">Overview</a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="/" class="active" aria-current="page">Overview</a>
         <a href="/">Live map</a>
         <a href="/triggers.html">What sets them off</a>
         <a href="/tide.html">Where it goes</a>
