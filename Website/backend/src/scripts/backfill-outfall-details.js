@@ -2,7 +2,7 @@
  * Fill in river names, placeholder names and wrong positions for outfalls
  * imported from EDM history, using the Thames Water discharge status feed.
  *
- * Run with: node src/scripts/backfill-outfall-details.js [--apply]
+ * Run with: node src/scripts/backfill-outfall-details.js [--names-only] [--apply]
  *
  * EDM history rows use Thames Water's uniqueId (e.g. TWL00002) as their
  * permit_number, and the feed carries the same uniqueId, so rows are matched
@@ -13,7 +13,8 @@
  *
  * Rain was looked up at each outfall's old position, so when a position changes
  * the rain values of its spills are cleared. Run backfill-rainfall.js afterwards
- * to fetch them again for the right place.
+ * to fetch them again for the right place. --names-only skips positions (and so
+ * leaves rain alone) and only fills in the river and outfall names.
  *
  * Without --apply it only prints what would change. With --apply it first saves
  * the old values to outfall-details-backup-<time>.json in the current folder.
@@ -27,18 +28,37 @@ import { osgbToLatLng } from '../utils/index.js';
 import { calculateDistance } from '../utils/haversine.js';
 
 const APPLY = process.argv.includes('--apply');
+const NAMES_ONLY = process.argv.includes('--names-only');
 const MAX_OFFSET_M = 250;
 const PAGE_SIZE = 1000;
 const PLACEHOLDERS = new Set(['', 'unknown', 'n/a']);
 
 const isPlaceholder = (value) => PLACEHOLDERS.has(String(value ?? '').trim().toLowerCase());
 
+// The feed sometimes answers 429 (too many requests), so wait and try again
+async function getWithRetry(url, params, waitsSeconds = [5, 15, 30]) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await axios.get(url, { params, timeout: config.apis.timeoutMs });
+    } catch (err) {
+      const status = err.response?.status;
+      const retryable = !status || status === 429 || status >= 500;
+      if (!retryable || attempt >= waitsSeconds.length) {
+        throw err;
+      }
+      const wait = Number(err.response?.headers?.['retry-after']) || waitsSeconds[attempt];
+      console.log(`  Feed answered ${status || err.code}, trying again in ${wait} s`);
+      await new Promise((resolve) => setTimeout(resolve, wait * 1000));
+    }
+  }
+}
+
 async function fetchFeed() {
   const items = [];
   for (let offset = 0; ; offset += PAGE_SIZE) {
-    const { data } = await axios.get(`${config.apis.thamesWaterBaseUrl}/discharge/status`, {
-      params: { limit: PAGE_SIZE, offset },
-      timeout: config.apis.timeoutMs
+    const { data } = await getWithRetry(`${config.apis.thamesWaterBaseUrl}/discharge/status`, {
+      limit: PAGE_SIZE,
+      offset
     });
     const page = Array.isArray(data?.items) ? data.items : [];
     items.push(...page);
@@ -62,7 +82,7 @@ function changesFor(row, item) {
 
   const easting = Number(item.x);
   const northing = Number(item.y);
-  if (easting > 0 && northing > 0) {
+  if (!NAMES_ONLY && easting > 0 && northing > 0) {
     const { lat, lng } = osgbToLatLng(easting, northing);
     const offsetM = row.lat == null || row.lng == null
       ? Infinity
@@ -81,7 +101,7 @@ function changesFor(row, item) {
 }
 
 async function main() {
-  console.log(`[Outfall Details] ${APPLY ? 'APPLY' : 'Dry run (add --apply to write)'}\n`);
+  console.log(`[Outfall Details] ${APPLY ? 'APPLY' : 'Dry run (add --apply to write)'}${NAMES_ONLY ? ', names only' : ''}\n`);
 
   const feed = await fetchFeed();
   const byUniqueId = new Map(feed.map((item) => [item.uniqueId, item]));
@@ -164,7 +184,9 @@ async function main() {
     }
     await connection.commit();
     console.log(`  Updated ${updates.length} outfalls and cleared rain for ${spillRain.length} spills`);
-    console.log('  Next: node src/scripts/backfill-rainfall.js');
+    if (spillRain.length > 0) {
+      console.log('  Next: node src/scripts/backfill-rainfall.js');
+    }
   } catch (err) {
     await connection.rollback();
     throw err;
