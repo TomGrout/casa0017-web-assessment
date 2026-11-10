@@ -12,8 +12,9 @@
  * - easting, northing, lat and lng, when missing or more than 250 m from the feed
  *
  * Rain was looked up at each outfall's old position, so when a position changes
- * the rain values of its spills are cleared. Run backfill-rainfall.js afterwards
- * to fetch them again for the right place. --names-only skips positions (and so
+ * the rain values of its spills are cleared. Run the backfill-rainfall.js command
+ * it prints afterwards to fetch them again for the right place, for only those
+ * outfalls. --names-only skips positions (and so
  * leaves rain alone) and only fills in the river and outfall names.
  *
  * Without --apply it only prints what would change. With --apply it first saves
@@ -184,8 +185,8 @@ async function main() {
     }
     await connection.commit();
     console.log(`  Updated ${updates.length} outfalls and cleared rain for ${spillRain.length} spills`);
-    if (spillRain.length > 0) {
-      console.log('  Next: node src/scripts/backfill-rainfall.js');
+    if (movedIds.length > 0) {
+      console.log(`  Next: node src/scripts/backfill-rainfall.js --outfalls ${movedIds.join(',')}`);
     }
   } catch (err) {
     await connection.rollback();
