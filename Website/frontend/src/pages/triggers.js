@@ -91,7 +91,7 @@ function inLondon(point) {
   )
 }
 
-// Most outfalls are labelled "Unknown", so fall back on where they are
+// Tributaries such as Pymmes Brook flow into the Lea, so fall back on where they are
 function riverOf(label, point) {
   if (LEA_LABEL.test(label)) {
     return 'lea'
