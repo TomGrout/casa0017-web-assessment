@@ -24,7 +24,10 @@
             class="cloud"
             d="M9 14 A3.6 3.6 0 0 1 9.4 6.9 A5.8 5.8 0 0 1 20 4.6 A4.6 4.6 0 0 1 27.3 8.2 A3 3 0 0 1 27.2 14 Z"
           />
-          <path class="drop" d="M18 16.5 C16 19.6, 15.6 21.6, 18 21.8 C20.4 21.6, 20 19.6, 18 16.5 Z" />
+          <path
+            class="drop"
+            d="M18 16.5 C16 19.6, 15.6 21.6, 18 21.8 C20.4 21.6, 20 19.6, 18 16.5 Z"
+          />
           <path class="wave" d="M3 26.5 q3.5 -3 7 0 t7 0 t7 0 t7 0" />
         </svg>
         <span class="logo-word">Rain <span class="logo-to">to</span> Spill</span>
@@ -72,10 +75,10 @@
 
           <li class="card">
             <span class="step-number">3</span>
-            <h3>Record each spill</h3>
+            <h3>Collect past spills</h3>
             <p>
-              Every spill is saved in our database with the outfall it came from and the time it
-              started and stopped.
+              Past spills come from Thames Water's own monitoring records, which start in January
+              2024. Each one has the outfall it came from and the time it started and stopped.
             </p>
           </li>
 
@@ -83,8 +86,9 @@
             <span class="step-number">4</span>
             <h3>Link spills to rain and tide</h3>
             <p>
-              For each spill we add up the rain that fell in the 24 hours before it started, and we
-              note the tide at that moment, to see when the tide pushes sewage back up the river.
+              For each spill we add up the rain that fell at that outfall in the 24 hours before it
+              started, using Open-Meteo's weather history. We also work out the tide at that moment,
+              to see when the tide pushes sewage back up the river.
             </p>
           </li>
         </ol>
@@ -133,9 +137,12 @@
 
           <div class="card api-card">
             <p class="provider">Open-Meteo</p>
-            <h3>Weather forecast API</h3>
-            <p>Rain forecast and soil moisture, which tells us how wet the ground already is.</p>
-            <p class="used-for">Used for: wet catchment</p>
+            <h3>Weather history and forecast APIs</h3>
+            <p>
+              Hourly rain at each outfall for past spills, plus the rain forecast and soil moisture,
+              which tells us how wet the ground already is.
+            </p>
+            <p class="used-for">Used for: rain before each spill, wet catchment</p>
             <a href="https://open-meteo.com/">open-meteo.com</a>
           </div>
 
@@ -156,9 +163,7 @@
           <div class="card api-card">
             <p class="provider">Environment Agency</p>
             <h3>Event Duration Monitoring: annual returns</h3>
-            <p>
-              Yearly records of how often and how long every storm overflow in England spilled.
-            </p>
+            <p>Yearly records of how often and how long every storm overflow in England spilled.</p>
             <p class="used-for">Used for: past spills</p>
             <a
               href="https://www.data.gov.uk/dataset/event-duration-monitoring-storm-overflows-annual-returns"
@@ -176,7 +181,8 @@
             <li>
               Defra Press Office (2023) ‘Government response to BBC reporting on storm overflows’,
               <em>Defra in the media</em>, 5 September. Available at:
-              <a href="https://deframedia.blog.gov.uk/2023/09/05/government-response-to-bbc-reporting-on-storm-overflows/"
+              <a
+                href="https://deframedia.blog.gov.uk/2023/09/05/government-response-to-bbc-reporting-on-storm-overflows/"
                 >https://deframedia.blog.gov.uk/2023/09/05/government-response-to-bbc-reporting-on-storm-overflows/</a
               >
               (Accessed: 9 October 2026).
@@ -205,9 +211,11 @@
               (Accessed: 10 October 2026).
             </li>
             <li>
-              Environment Agency (2025) <em>Environment Agency storm overflow spill data for 2024</em>.
-              Press release, 27 March. Available at:
-              <a href="https://www.gov.uk/government/news/environment-agency-storm-overflow-spill-data-for-2024"
+              Environment Agency (2025)
+              <em>Environment Agency storm overflow spill data for 2024</em>. Press release, 27
+              March. Available at:
+              <a
+                href="https://www.gov.uk/government/news/environment-agency-storm-overflow-spill-data-for-2024"
                 >https://www.gov.uk/government/news/environment-agency-storm-overflow-spill-data-for-2024</a
               >
               (Accessed: 9 October 2026).
@@ -216,7 +224,8 @@
               Environment Agency (2026a)
               <em>Fewer and shorter storm overflow spills in 2025, new monitoring data shows</em>.
               Press release, 26 March. Available at:
-              <a href="https://www.gov.uk/government/news/fewer-and-shorter-storm-overflow-spills-in-2025-new-monitoring-data-shows"
+              <a
+                href="https://www.gov.uk/government/news/fewer-and-shorter-storm-overflow-spills-in-2025-new-monitoring-data-shows"
                 >https://www.gov.uk/government/news/fewer-and-shorter-storm-overflow-spills-in-2025-new-monitoring-data-shows</a
               >
               (Accessed: 10 October 2026).
@@ -225,7 +234,8 @@
               Environment Agency (2026b)
               <em>Event Duration Monitoring – Storm Overflows – Annual Returns</em> [Data set].
               Available at:
-              <a href="https://www.data.gov.uk/dataset/event-duration-monitoring-storm-overflows-annual-returns"
+              <a
+                href="https://www.data.gov.uk/dataset/event-duration-monitoring-storm-overflows-annual-returns"
                 >https://www.data.gov.uk/dataset/event-duration-monitoring-storm-overflows-annual-returns</a
               >
               (Accessed: 9 October 2026).
@@ -256,7 +266,8 @@
             </li>
             <li>
               Thames Water (no date a) <em>History of London’s sewer system</em>. Available at:
-              <a href="https://www.thameswater.co.uk/about-us/community/days-out/riverside-spaces/history-of-london-sewer-system"
+              <a
+                href="https://www.thameswater.co.uk/about-us/community/days-out/riverside-spaces/history-of-london-sewer-system"
                 >https://www.thameswater.co.uk/about-us/community/days-out/riverside-spaces/history-of-london-sewer-system</a
               >
               (Accessed: 10 October 2026).
@@ -277,7 +288,8 @@
             <li>
               UCL (2025) <em>Sewage map of England</em>. UCL Mathematical &amp; Physical Sciences
               news, July. Available at:
-              <a href="https://www.ucl.ac.uk/mathematical-physical-sciences/news/2025/jul/sewage-map-england"
+              <a
+                href="https://www.ucl.ac.uk/mathematical-physical-sciences/news/2025/jul/sewage-map-england"
                 >https://www.ucl.ac.uk/mathematical-physical-sciences/news/2025/jul/sewage-map-england</a
               >
               (Accessed: 9 October 2026).
