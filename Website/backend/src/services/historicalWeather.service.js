@@ -51,8 +51,10 @@ export async function fetchHistoricalPrecipitation(lat, lng, startDate, endDate)
     return [];
   }
 
+  // Times are UTC but have no "Z", so new Date() would read them in the
+  // computer's own time zone and shift the rain window (by 1 h in UK summer)
   return data.hourly.time.map((time, i) => ({
-    time,
+    time: time.endsWith('Z') ? time : `${time}Z`,
     precipitation: data.hourly.precipitation[i] || 0
   }));
 }
