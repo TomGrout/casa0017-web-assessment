@@ -143,6 +143,12 @@ export async function fetchDischargeStatus(options = {}) {
       await cacheOutfallStatus(outfalls);
     }
 
+    try {
+      await syncHistoryOutfallStatus(rawList);
+    } catch (err) {
+      console.error('[ThamesWater] Could not update history outfall status:', err.message);
+    }
+
     return {
       source: 'live',
       fetchedAt: new Date().toISOString(),
@@ -251,6 +257,58 @@ async function cacheOutfallStatus(outfalls) {
   `;
 
   await pool.query(sql, [values]);
+}
+
+/**
+ * Copy the live status to outfalls imported from EDM history. Those rows are
+ * stored under Thames Water's uniqueId (e.g. TWL00002), not the permit number,
+ * so cacheOutfallStatus never reaches them. Only rows that already exist are
+ * touched, and only their status fields.
+ * @param {Object[]} items - Raw items from the discharge status feed
+ * @returns {Promise<void>}
+ */
+async function syncHistoryOutfallStatus(items) {
+  const byUniqueId = new Map(
+    items.filter((item) => item.uniqueId).map((item) => [item.uniqueId, normalizeOutfall(item)])
+  );
+  if (byUniqueId.size === 0) {
+    return;
+  }
+
+  const [rows] = await pool.query(
+    'SELECT permit_number, location_name, receiving_watercourse FROM outfalls WHERE permit_number IN (?)',
+    [[...byUniqueId.keys()]]
+  );
+  if (rows.length === 0) {
+    return;
+  }
+
+  const values = rows.map((row) => {
+    const live = byUniqueId.get(row.permit_number);
+    return [
+      row.permit_number,
+      row.location_name,
+      row.receiving_watercourse,
+      live.isDischarging ? 1 : 0,
+      toMysqlDateTime(live.mostRecentStart),
+      toMysqlDateTime(live.mostRecentStop)
+    ];
+  });
+
+  await pool.query(
+    `
+    INSERT INTO outfalls (
+      permit_number, location_name, receiving_watercourse,
+      is_discharging, most_recent_start, most_recent_stop
+    ) VALUES ?
+    ON DUPLICATE KEY UPDATE
+      is_discharging = VALUES(is_discharging),
+      most_recent_start = VALUES(most_recent_start),
+      most_recent_stop = VALUES(most_recent_stop),
+      updated_at = CURRENT_TIMESTAMP
+  `,
+    [values]
+  );
 }
 
 /**
