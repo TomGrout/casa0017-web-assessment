@@ -32,7 +32,10 @@ const client = axios.create({
   timeout: config.apis.timeoutMs
 });
 
-const TARGET_RIVERS = ['lee', 'lea', 'bow', 'thames'];
+const TARGET_RIVERS = ['lee', 'lea', 'bow creek', 'thames'];
+
+// Whole words only, so "lee" does not match Fleet Brook or "lea" River Leach
+const TARGET_RIVER_PATTERN = new RegExp(`\\b(${TARGET_RIVERS.join('|')})\\b`, 'i');
 
 /**
  * Thames Water API v2 query parameters
@@ -82,10 +85,7 @@ function buildQueryParams(options = {}) {
  * @param {string} watercourse - Watercourse name
  * @returns {boolean} True if watercourse is a London target river
  */
-const isTargetRiver = (watercourse = '') => {
-  const lower = watercourse.toLowerCase();
-  return TARGET_RIVERS.some((river) => lower.includes(river));
-};
+const isTargetRiver = (watercourse = '') => TARGET_RIVER_PATTERN.test(watercourse ?? '');
 
 /**
  * Normalize raw API outfall item to standard Outfall format
