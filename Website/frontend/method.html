@@ -87,8 +87,9 @@
             <h3>Link spills to rain and tide</h3>
             <p>
               For each spill we add up the rain that fell at that outfall in the 24 hours before it
-              started, using Open-Meteo's weather history. We also work out the tide at that moment,
-              to see when the tide pushes sewage back up the river.
+              started, using Open-Meteo's weather history. We also work out whether the tide was
+              rising or falling at that moment, from tide data for the Thames estuary that we
+              checked against the Silvertown gauge.
             </p>
           </li>
         </ol>
@@ -147,6 +148,20 @@
           </div>
 
           <div class="card api-card">
+            <p class="provider">Open-Meteo</p>
+            <h3>Marine weather API</h3>
+            <p>
+              Hourly tide heights in the Thames estuary since 2024. We shift them by about two hours
+              to match the Silvertown gauge, which gives the high and low tide times for past
+              spills. They agree with the gauge about 96% of the time.
+            </p>
+            <p class="used-for">Used for: where it goes</p>
+            <a href="https://open-meteo.com/en/docs/marine-weather-api"
+              >open-meteo.com/en/docs/marine-weather-api</a
+            >
+          </div>
+
+          <div class="card api-card">
             <p class="provider">RainViewer</p>
             <h3>Weather radar API</h3>
             <p>The latest rain radar images, showing where it is raining right now.</p>
@@ -178,6 +193,18 @@
 
         <div class="card">
           <ul class="references">
+            <li>
+              Defra (2011)
+              <em
+                >Creating a River Thames fit for our future: a strategic and economic case for the
+                Thames Tunnel</em
+              >. PB 13677. Available at:
+              <a
+                href="https://assets.publishing.service.gov.uk/media/5a8017b0e5274a2e8ab4e240/pb13677-thamestunnel-businesscase.pdf"
+                >https://assets.publishing.service.gov.uk/media/5a8017b0e5274a2e8ab4e240/pb13677-thamestunnel-businesscase.pdf</a
+              >
+              (Accessed: 10 November 2026).
+            </li>
             <li>
               Defra Press Office (2023) ‘Government response to BBC reporting on storm overflows’,
               <em>Defra in the media</em>, 5 September. Available at:
@@ -249,6 +276,13 @@
               Lipp, A. and Dawe, J. (no date) <em>SewageMap</em>. Available at:
               <a href="https://www.sewagemap.co.uk/">https://www.sewagemap.co.uk/</a>
               (Accessed: 9 October 2026).
+            </li>
+            <li>
+              Open-Meteo (no date) <em>Marine weather API</em>. Available at:
+              <a href="https://open-meteo.com/en/docs/marine-weather-api"
+                >https://open-meteo.com/en/docs/marine-weather-api</a
+              >
+              (Accessed: 10 November 2026).
             </li>
             <li>
               The Rivers Trust (no date) <em>Sewage map</em>. Available at:
