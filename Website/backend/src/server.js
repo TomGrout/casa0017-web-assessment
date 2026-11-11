@@ -16,7 +16,11 @@ async function startServer() {
     const httpServer = http.createServer(app);
     initSocket(httpServer);
 
-    initIngestionCron();
+    if (config.cron.enabled) {
+      initIngestionCron();
+    } else {
+      console.log('[JOBS] Ingestion cron disabled (CRON_ENABLED=false)');
+    }
 
     httpServer.listen(config.port, () => {
       console.log('Server and WebSockets listening...')

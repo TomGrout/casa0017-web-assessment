@@ -117,6 +117,8 @@ CREATE TABLE `spill_event` (
   `start_ts` datetime NOT NULL,
   `end_ts` datetime DEFAULT NULL,
   `rain_24h_mm` decimal(6,2) DEFAULT NULL,
+  `rain_48h_mm` decimal(6,2) DEFAULT NULL,
+  `rain_72h_mm` decimal(6,2) DEFAULT NULL,
   `tidal_phase_at_start` varchar(20) DEFAULT NULL,
   `is_tidally_trapped` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),

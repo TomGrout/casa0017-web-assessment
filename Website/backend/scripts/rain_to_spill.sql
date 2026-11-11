@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS spill_event (
     start_ts DATETIME NOT NULL,
     end_ts DATETIME NULL,
     rain_24h_mm DECIMAL(6, 2) NULL,
+    rain_48h_mm DECIMAL(6, 2) NULL,
+    rain_72h_mm DECIMAL(6, 2) NULL,
     tidal_phase_at_start VARCHAR(20) NULL,
     is_tidally_trapped TINYINT(1) DEFAULT 0,
     INDEX idx_outfall_start (outfall_id, start_ts),
