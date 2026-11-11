@@ -12,6 +12,11 @@ const pool = mysql.createPool({
   queueLimit: 0,
   timezone: 'Z',
   decimalNumbers: true,
+  // TiDB Cloud can close idle connections, so close ours first and probe the rest
+  maxIdle: 2,
+  idleTimeout: 60000,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
   ssl: config.db.ssl ? { rejectUnauthorized: true } : false
 });
 

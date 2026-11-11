@@ -8,6 +8,9 @@
 
 import { pool } from '../db/db.js';
 
+// Match river names as whole words, so "Lea" does not match "River Leach"
+const wholeWords = (pattern) => `\\b(${pattern})\\b`;
+
 /**
  * Get tidal phase statistics by river
  */
@@ -19,7 +22,7 @@ export async function getTidalStatsByRiver(options = {}) {
 
   if (rivers && rivers.length > 0) {
     whereSql = 'WHERE o.receiving_watercourse REGEXP ?';
-    params.push(rivers.join('|'));
+    params.push(wholeWords(rivers.join('|')));
   }
 
   params.push(minEvents);
@@ -54,7 +57,7 @@ export async function getRainfallThresholds(options = {}) {
 
   if (river) {
     conditions.push('o.receiving_watercourse REGEXP ?');
-    params.push(river);
+    params.push(wholeWords(river));
   }
 
   const havingConditions = [];
@@ -103,7 +106,7 @@ export async function getAntecedentAnalysis(options = {}) {
 
   if (river) {
     whereSql += ' AND o.receiving_watercourse REGEXP ?';
-    params.push(river);
+    params.push(wholeWords(river));
   }
 
   const [rows] = await pool.query(`
@@ -182,7 +185,7 @@ export async function getScatterData(options = {}) {
 
   if (river) {
     whereSql += ' AND o.receiving_watercourse REGEXP ?';
-    params.push(river);
+    params.push(wholeWords(river));
   }
 
   if (bbox) {

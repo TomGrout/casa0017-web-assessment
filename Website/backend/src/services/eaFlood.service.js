@@ -26,8 +26,10 @@ const client = axios.create({
 const STATIONS = Object.freeze({
   SILVERTOWN_MEASURE: '0001-level-tidal_level-i-15_min-mAOD',
   SILVERTOWN_ID: '0001',
-  LEA_BRIDGE_ID: '7375',
-  WALTHAMSTOW_RAIN_ID: '5380TH'
+  LEA_BRIDGE_ID: '5390TH',
+  // Walthamstow (5380TH) only measures river level, so rain comes from the
+  // nearest rain gauge, in Wanstead Park
+  RAIN_GAUGE_ID: '239374TP'
 });
 
 /**
@@ -117,11 +119,11 @@ export async function fetchTidalStatus() {
 /**
  * Fetch rainfall status from a rain gauge station
  *
- * @param {string} [stationId] - EA rain gauge station ID (defaults to Walthamstow)
+ * @param {string} [stationId] - EA rain gauge station ID (defaults to Wanstead Park)
  * @param {number} [limit=96] - Max readings to fetch (96 = 24 hours at 15 min intervals)
  * @returns {Promise<RainfallStatusResponse>} Rainfall status with readings
  */
-export async function fetchRainfallStatus(stationId = STATIONS.WALTHAMSTOW_RAIN_ID, limit = 96) {
+export async function fetchRainfallStatus(stationId = STATIONS.RAIN_GAUGE_ID, limit = 96) {
   try {
     const { data } = await client.get(`/id/stations/${stationId}/readings`, {
       params: { parameter: 'rainfall', _sorted: '', _limit: limit }

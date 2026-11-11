@@ -1,7 +1,9 @@
 /**
  * Backfill historical rainfall data for spill events (FAST VERSION)
  *
- * Run with: node src/scripts/backfill-rainfall.js [--limit N] [--concurrency N]
+ * Run with: node src/scripts/backfill-rainfall.js [--limit N] [--concurrency N] [--outfalls ID,ID]
+ *
+ * --outfalls only fills spills of those outfalls (e.g. after their positions changed)
  *
  * Optimization strategy:
  * - Groups events by outfall (same location = same API response)
@@ -23,6 +25,8 @@ const limitIdx = args.indexOf('--limit');
 const concurrencyIdx = args.indexOf('--concurrency');
 const LIMIT = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : 100000;
 const CONCURRENCY = concurrencyIdx !== -1 ? parseInt(args[concurrencyIdx + 1], 10) : 3;
+const outfallsIdx = args.indexOf('--outfalls');
+const OUTFALLS = outfallsIdx !== -1 ? args[outfallsIdx + 1].split(',').filter(Boolean) : null;
 
 // Open-Meteo rate limit handling
 let currentDelay = 500; // Start with 500ms, increase on rate limits
@@ -168,9 +172,10 @@ async function main() {
     WHERE (se.rain_24h_mm IS NULL OR se.rain_48h_mm IS NULL OR se.rain_72h_mm IS NULL)
       AND o.lat IS NOT NULL
       AND o.lng IS NOT NULL
+      ${OUTFALLS ? 'AND se.outfall_id IN (?)' : ''}
     ORDER BY se.outfall_id, se.start_ts
     LIMIT ?
-  `, [LIMIT]);
+  `, OUTFALLS ? [OUTFALLS, LIMIT] : [LIMIT]);
 
   if (events.length === 0) {
     console.log('[Backfill Rainfall] No events need rainfall data.');
