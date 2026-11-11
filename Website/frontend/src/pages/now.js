@@ -1,12 +1,16 @@
 /* global $ */
 
-const API_URL = 'http://localhost:3000/api'
+import { LONDON_BBOX, inLondon } from '../data/helpers.js'
+
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api'
 
 const GAUGE_MAX_MM = 30
+const LIGHT_RAIN_MM = 4
+const LOAD_ATTEMPTS = 3
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-let lowestRain = null
+let usualRain = null
 let gaugeSeen = false
 
 document.documentElement.classList.add('js')
@@ -19,7 +23,7 @@ const revealObserver = new IntersectionObserver(
         revealObserver.unobserve(entry.target)
         if (entry.target.id === 'gauge-figure') {
           gaugeSeen = true
-          showLowestRain()
+          showUsualRain()
         }
       }
     })
@@ -36,32 +40,41 @@ const TIDE_CAPTIONS = {
   rising: '<strong>Rising tide.</strong> Pushed back toward Stratford.',
 }
 
-function showLowestRain() {
-  if (lowestRain === null || !gaugeSeen) {
+function showUsualRain() {
+  if (usualRain === null || !gaugeSeen) {
     return
   }
 
-  const percent = Math.min(lowestRain / GAUGE_MAX_MM, 1) * 100
+  const percent = Math.min(usualRain / GAUGE_MAX_MM, 1) * 100
   $('#gauge-fill').css('height', percent + '%')
-  $('#lowest-rain').removeClass('is-empty')
+  $('#usual-rain').removeClass('is-empty')
 
   if (reduceMotion) {
-    $('#lowest-rain').text(lowestRain + ' mm')
+    $('#usual-rain').text(usualRain + ' mm')
     return
   }
 
   $({ value: 0 }).animate(
-    { value: lowestRain },
+    { value: usualRain },
     {
       duration: 1600,
       step: function (now) {
-        $('#lowest-rain').text(now.toFixed(1) + ' mm')
+        $('#usual-rain').text(now.toFixed(1) + ' mm')
       },
       complete: function () {
-        $('#lowest-rain').text(lowestRain + ' mm')
+        $('#usual-rain').text(usualRain + ' mm')
       },
     }
   )
+}
+
+// The middle value: half of the numbers are lower and half are higher
+function median(numbers) {
+  const sorted = numbers.slice().sort(function (a, b) {
+    return a - b
+  })
+  const middle = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 1 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2
 }
 
 function showTide(tide) {
@@ -79,71 +92,139 @@ $('.tide-button').on('click', function () {
 
 $('#last-updated').text('Loading live data…')
 
-$.getJSON(API_URL + '/status')
-  .done(function (response) {
-    const data = response.data
+function showStatus(response) {
+  const data = response.data
 
-    if (data.rainfall && data.rainfall.count > 0) {
-      $('#rain-now').text(data.rainfall.total24hMm + ' mm').removeClass('is-empty')
-    }
+  if (data.rainfall && data.rainfall.count > 0) {
+    $('#rain-now')
+      .text(data.rainfall.total24hMm + ' mm')
+      .removeClass('is-empty')
+  }
 
-    const outfalls = data.discharges.items
-    if (outfalls.length > 0) {
-      let spilling = 0
-      $.each(outfalls, function (i, outfall) {
-        // isDischarging is true/false when live, 1/0 from the database
-        if (Number(outfall.isDischarging) === 1) {
-          spilling = spilling + 1
-        }
-      })
-      $('#spilling-now')
-        .html(spilling + '<span class="reading-of"> of ' + outfalls.length + '</span>')
-        .removeClass('is-empty')
-    }
-
-    if (data.tide && data.tide.tidalPhase) {
-      const tide = data.tide.tidalPhase === 'FLOOD' ? 'rising' : 'falling'
-      $('#tide-now')
-        .text(tide === 'rising' ? 'Rising' : 'Falling')
-        .removeClass('is-empty')
-
-      $('.tide-button[data-tide="' + tide + '"]').addClass('is-now')
-      showTide(tide)
-    }
-
-    const time = new Date(response.timestamp).toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
+  // The live feed covers the Thames and Lea well beyond London, so keep the London ones.
+  // When Thames Water doesn't answer, the backend sends every outfall it has stored
+  // instead, which isn't a live count, so leave the reading empty.
+  const live = data.discharges.source === 'live'
+  const outfalls = data.discharges.items.filter(function (outfall) {
+    return outfall.lat && inLondon([Number(outfall.lng), Number(outfall.lat)])
+  })
+  if (live && outfalls.length > 0) {
+    let spilling = 0
+    $.each(outfalls, function (i, outfall) {
+      if (outfall.isDischarging) {
+        spilling = spilling + 1
+      }
     })
-    $('#last-updated').text('Live, updated ' + time)
+    $('#spilling-now')
+      .html(spilling + '<span class="reading-of"> of ' + outfalls.length + '</span>')
+      .removeClass('is-empty')
+  } else if (!live) {
+    $('#live-message').text(
+      "Thames Water's live feed didn't answer, so we can't show spills right now."
+    )
+  }
+
+  if (data.tide && data.tide.tidalPhase) {
+    const tide = data.tide.tidalPhase === 'FLOOD' ? 'rising' : 'falling'
+    $('#tide-now')
+      .text(tide === 'rising' ? 'Rising' : 'Falling')
+      .removeClass('is-empty')
+
+    $('.tide-button[data-tide="' + tide + '"]').addClass('is-now')
+    showTide(tide)
+  }
+
+  const time = new Date(response.timestamp).toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
   })
-  .fail(function () {
-    $('#last-updated').text('Live data unavailable')
-    $('#live-message').text("Live readings aren't available right now. Try again in a few minutes.")
+  $('#last-updated').text('Live, updated ' + time)
+}
+
+function loadStatus(attempt) {
+  $.getJSON(API_URL + '/status')
+    .done(showStatus)
+    .fail(function () {
+      if (attempt < LOAD_ATTEMPTS) {
+        setTimeout(function () {
+          loadStatus(attempt + 1)
+        }, 1500)
+        return
+      }
+      $('#last-updated').text('Live data unavailable')
+      $('#live-message').text(
+        "Live readings aren't available right now. Try again in a few minutes."
+      )
+    })
+}
+
+loadStatus(1)
+
+function showRainBeforeSpills(scatter, geojson) {
+  const london = new Set()
+  geojson.features.forEach(function (feature) {
+    if (inLondon(feature.geometry.coordinates)) {
+      london.add(feature.properties.permitNumber)
+    }
   })
 
-$.getJSON(API_URL + '/thresholds').done(function (response) {
-  const outfalls = response.data
+  const rain = []
+  let firstStart = null
+  scatter.data.forEach(function (row) {
+    if (london.has(row.permitNumber)) {
+      rain.push(Number(row.rain24h))
+      if (firstStart === null || row.startTime < firstStart) {
+        firstStart = row.startTime
+      }
+    }
+  })
 
-  if (outfalls.length === 0) {
-    $('#lowest-rain-text').text('No spills recorded yet. This fills in after the first one.')
+  if (rain.length === 0) {
+    $('#usual-rain-text').text('No spills recorded yet. This fills in after the first one.')
     return
   }
 
-  const first = outfalls[0]
-  lowestRain = Number(first.minRain24hMm)
-  showLowestRain()
+  const light = rain.filter(function (mm) {
+    return mm <= LIGHT_RAIN_MM
+  }).length
+  const since = new Date(firstStart).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
-  let totalSpills = 0
-  $.each(outfalls, function (i, outfall) {
-    totalSpills = totalSpills + Number(outfall.spillCount)
-  })
+  usualRain = Number(median(rain).toFixed(1))
+  showUsualRain()
 
-  $('#lowest-rain-text').text(
-    'Rain before a spill at ' +
-      first.locationName +
-      '. The lowest of ' +
-      totalSpills +
-      " spills we've recorded."
+  $('#usual-rain-text').text(
+    "Half of London's " +
+      rain.length.toLocaleString('en-GB') +
+      ' spills since ' +
+      since +
+      ' came after less rain than this. ' +
+      Math.round((100 * light) / rain.length) +
+      '% came after ' +
+      LIGHT_RAIN_MM +
+      ' mm or less.'
   )
-})
+}
+
+// The online database sometimes drops a quiet connection, so try again before giving up
+function loadSpills(attempt) {
+  $.when(
+    $.getJSON(API_URL + '/analysis/scatter?limit=20000&bbox=' + LONDON_BBOX),
+    $.getJSON(API_URL + '/outfalls/geojson')
+  )
+    .done(function (scatterResponse, geojsonResponse) {
+      showRainBeforeSpills(scatterResponse[0], geojsonResponse[0])
+    })
+    .fail(function () {
+      if (attempt < LOAD_ATTEMPTS) {
+        setTimeout(function () {
+          loadSpills(attempt + 1)
+        }, 1500)
+      } else {
+        $('#usual-rain-text').text(
+          "We couldn't load the spill records. Try again in a few minutes."
+        )
+      }
+    })
+}
+
+loadSpills(1)

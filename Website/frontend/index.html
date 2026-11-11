@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rain To Spill – sewage spills on the River Lea</title>
+    <title>Rain To Spill – sewage spills in London's rivers</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,7 +24,10 @@
             class="cloud"
             d="M9 14 A3.6 3.6 0 0 1 9.4 6.9 A5.8 5.8 0 0 1 20 4.6 A4.6 4.6 0 0 1 27.3 8.2 A3 3 0 0 1 27.2 14 Z"
           />
-          <path class="drop" d="M18 16.5 C16 19.6, 15.6 21.6, 18 21.8 C20.4 21.6, 20 19.6, 18 16.5 Z" />
+          <path
+            class="drop"
+            d="M18 16.5 C16 19.6, 15.6 21.6, 18 21.8 C20.4 21.6, 20 19.6, 18 16.5 Z"
+          />
           <path class="wave" d="M3 26.5 q3.5 -3 7 0 t7 0 t7 0 t7 0" />
         </svg>
         <span class="logo-word">Rain <span class="logo-to">to</span> Spill</span>
@@ -49,17 +52,21 @@
         <div class="wrap">
           <div class="opening-top">
             <div class="opening-text">
-              <p class="kicker">River Lea, east London</p>
+              <p class="kicker">London's rivers</p>
               <h1>
                 Where does the sewage go
                 <span class="scribble"
-                  >after it rains?<svg viewBox="0 0 300 16" preserveAspectRatio="none" aria-hidden="true">
+                  >after it rains?<svg
+                    viewBox="0 0 300 16"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
                     <path pathLength="1" d="M4 10 C60 3, 120 15, 180 8 S262 5, 296 11" /></svg
                 ></span>
               </h1>
               <p class="lede">
-                Out to the Thames, usually. But when the tide is coming in, it can be pushed back up
-                the river toward Stratford.
+                Into the nearest river, then down to the Thames. But the Thames is tidal, so twice a
+                day it pushes back upstream, up rivers like the Lea toward Stratford.
               </p>
             </div>
 
@@ -67,7 +74,7 @@
               <svg
                 viewBox="0 0 440 380"
                 role="img"
-                aria-label="Sketch map. The River Lea runs down past Walthamstow, Lea Bridge and Stratford, becomes Bow Creek, and joins the Thames near Silvertown. A rising tide pushes water back up Bow Creek."
+                aria-label="Sketch map of one example, the River Lea. It runs down past Stratford, becomes Bow Creek, and joins the Thames near Silvertown. A rising tide pushes water back up Bow Creek."
               >
                 <path
                   class="map-thames"
@@ -79,10 +86,7 @@
                   pathLength="1"
                   d="M150 10 C140 60, 176 80, 166 120 S150 178, 184 204 S216 250, 232 272 S252 302, 262 322"
                 />
-                <path
-                  class="map-flow"
-                  d="M-10 338 C110 326, 190 344, 262 324 S380 312, 450 328"
-                />
+                <path class="map-flow" d="M-10 338 C110 326, 190 344, 262 324 S380 312, 450 328" />
                 <path
                   class="map-flow"
                   d="M150 10 C140 60, 176 80, 166 120 S150 178, 184 204 S216 250, 232 272 S252 302, 262 322"
@@ -117,12 +121,8 @@
                 <circle class="map-outfall" cx="205" cy="244" r="5" />
 
                 <circle class="map-gauge" cx="214" cy="52" r="6" />
-                <text class="map-label" x="228" y="50">Walthamstow</text>
+                <text class="map-label" x="228" y="50">Wanstead Park</text>
                 <text class="map-small" x="228" y="66">rain gauge</text>
-
-                <circle class="map-gauge" cx="166" cy="120" r="6" />
-                <text class="map-label" x="150" y="118" text-anchor="end">Lea Bridge</text>
-                <text class="map-small" x="150" y="134" text-anchor="end">river gauge</text>
 
                 <circle class="map-gauge" cx="340" cy="312" r="6" />
                 <text class="map-label" x="340" y="350" text-anchor="middle">Silvertown</text>
@@ -150,7 +150,7 @@
 
             <div class="reading">
               <p class="reading-number is-empty" id="spilling-now">--</p>
-              <p class="reading-label">outfalls spilling now</p>
+              <p class="reading-label">Thames and Lea outfalls spilling now</p>
             </div>
 
             <div class="reading">
@@ -181,7 +181,7 @@
               <rect class="water-fill" x="20" y="66" width="80" height="6" rx="3" />
             </svg>
             <p class="chapter-word">Rain</p>
-            <p class="chapter-where">Walthamstow</p>
+            <p class="chapter-where">over London</p>
           </div>
 
           <div class="chapter-text" data-reveal>
@@ -253,12 +253,14 @@
               <path class="rain waves" d="M14 73 q9 -4 18 0 t18 0 t18 0 t18 0 t18 0" />
             </svg>
             <p class="chapter-word">Spill</p>
-            <p class="chapter-where">River Lea</p>
+            <p class="chapter-where">into the rivers</p>
           </div>
 
           <div class="chapter-text" data-reveal>
             <h2>Sometimes a shower is enough.</h2>
-            <p>If the ground is already soaked, it takes very little rain to tip an outfall over.</p>
+            <p>
+              It doesn't take a storm. Plenty of London's spills follow a few hours of light rain.
+            </p>
             <a class="chapter-link" href="/triggers.html">See what sets them off →</a>
           </div>
 
@@ -271,11 +273,13 @@
                 <div class="gauge"><div class="gauge-fill" id="gauge-fill"></div></div>
               </div>
               <div>
-                <p class="stat-label">Least rain before a spill</p>
-                <p class="stat-number is-empty" id="lowest-rain">-- mm</p>
+                <p class="stat-label">Usual rain before a spill</p>
+                <p class="stat-number is-empty" id="usual-rain">-- mm</p>
               </div>
             </div>
-            <figcaption id="lowest-rain-text">Rain in the 24 hours before a spill.</figcaption>
+            <figcaption id="usual-rain-text">
+              Rain in the 24 hours before a spill in London.
+            </figcaption>
           </figure>
         </div>
       </section>
@@ -294,14 +298,15 @@
               <path class="ink" d="M84 14 V66 M77 22 L84 13 L91 22 M77 58 L84 67 L91 58" />
             </svg>
             <p class="chapter-word">Tide</p>
-            <p class="chapter-where">Silvertown</p>
+            <p class="chapter-where">on the Thames</p>
           </div>
 
           <div class="chapter-text" data-reveal>
             <h2>Then the tide decides.</h2>
             <p>
-              Twice a day the Thames pushes up Bow Creek. If an outfall spills while the tide is
-              rising, the sewage is pushed back toward Stratford.
+              The Thames through London is tidal. Twice a day it pushes back upstream, and up creeks
+              like Bow&nbsp;Creek. If an outfall spills while the tide is rising, the sewage goes
+              upstream first.
             </p>
             <a class="chapter-link" href="/tide.html">See where it goes →</a>
           </div>
@@ -341,7 +346,9 @@
       <section class="how">
         <div class="wrap">
           <h2>How we know</h2>
-          <p class="how-intro">We check four public sources every 15 minutes.</p>
+          <p class="how-intro">
+            Live readings come in every 15 minutes. Past spills go back to January 2024.
+          </p>
 
           <dl class="sources">
             <div>
@@ -349,12 +356,12 @@
               <dd>Thames Water</dd>
             </div>
             <div>
-              <dt>Rain</dt>
-              <dd>Walthamstow gauge</dd>
+              <dt>Rain before a spill</dt>
+              <dd>Open-Meteo</dd>
             </div>
             <div>
-              <dt>River level</dt>
-              <dd>Lea Bridge gauge</dd>
+              <dt>Rain now</dt>
+              <dd>Wanstead Park gauge</dd>
             </div>
             <div>
               <dt>Tide</dt>
@@ -370,7 +377,7 @@
     <footer class="footer">
       <div class="wrap">
         <p>Rain To Spill is a CASA0017 group project at UCL.</p>
-        <p>Data from Thames Water and the Environment Agency.</p>
+        <p>Data from Thames Water, the Environment Agency and Open-Meteo.</p>
       </div>
     </footer>
 
