@@ -698,8 +698,8 @@ function release() {
       $('#day-count').text('Day ' + day + '.')
       $('#day-text').text(
         comingIn
-          ? 'The tide is coming in. It is carried back upstream.'
-          : 'The tide is going out. It is carried toward the sea.'
+          ? 'The tide is coming in, carrying it back upstream.'
+          : 'The tide is going out, carrying it toward the sea.'
       )
     }
 
@@ -789,14 +789,36 @@ buildSketch()
 
 $('#last-updated').text('Loading live data…')
 
-$.getJSON(API_URL + '/tide')
-  .done(function (response) {
-    if (response.data && response.data.tidalPhase) {
-      showTideNow(response.data)
-    } else {
-      showTideError()
-    }
-  })
-  .fail(showTideError)
+// When the gauge service is slow, the backend sends its last saved reading instead,
+// which can be days old, so try again a couple of times before showing that
+function loadTide(attempt) {
+  $.getJSON(API_URL + '/tide')
+    .done(function (response) {
+      const tide = response.data
+      if (!tide || !tide.tidalPhase) {
+        showTideError()
+        return
+      }
+      const stale = Date.now() - new Date(tide.timestamp).getTime() > STALE_READING_MS
+      if (stale && attempt < LOAD_ATTEMPTS) {
+        setTimeout(function () {
+          loadTide(attempt + 1)
+        }, 2000)
+        return
+      }
+      showTideNow(tide)
+    })
+    .fail(function () {
+      if (attempt < LOAD_ATTEMPTS) {
+        setTimeout(function () {
+          loadTide(attempt + 1)
+        }, 2000)
+      } else {
+        showTideError()
+      }
+    })
+}
+
+loadTide(1)
 
 loadData(1)

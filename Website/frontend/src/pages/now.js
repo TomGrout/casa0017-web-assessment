@@ -7,6 +7,7 @@ const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/ap
 const GAUGE_MAX_MM = 30
 const LIGHT_RAIN_MM = 4
 const LOAD_ATTEMPTS = 3
+const STALE_READING_MS = 90 * 60 * 1000
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -124,7 +125,12 @@ function showStatus(response) {
     )
   }
 
-  if (data.tide && data.tide.tidalPhase) {
+  // An old saved reading is not the tide right now, so only show a recent one
+  const freshTide =
+    data.tide &&
+    data.tide.tidalPhase &&
+    Date.now() - new Date(data.tide.timestamp).getTime() < STALE_READING_MS
+  if (freshTide) {
     const tide = data.tide.tidalPhase === 'FLOOD' ? 'rising' : 'falling'
     $('#tide-now')
       .text(tide === 'rising' ? 'Rising' : 'Falling')
