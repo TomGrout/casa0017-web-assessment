@@ -18,6 +18,7 @@ const HOURS_MAX = 20
 const DEFAULT_RAIN_MM = 4
 const WET_PRIOR_MM = 2
 const TOP_ROWS = 5
+const LABEL_GAP = 12
 const MIN_SPILLS_TO_RANK = 5
 const LOAD_ATTEMPTS = 3
 
@@ -162,13 +163,25 @@ function drawScatter() {
   })
 }
 
+// Keep the label next to the dashed line: outside it while there is room, then just
+// inside it, and never past either edge of the chart
+function placeSelectionLabel() {
+  const plotWidth = $('#scatter').width()
+  const lineAt = (Math.min(state.maxRain, RAIN_MAX_MM) / RAIN_MAX_MM) * plotWidth
+  const $label = $('.selection-label')
+  const labelWidth = $label.outerWidth()
+  const fitsRight = lineAt + LABEL_GAP + labelWidth <= plotWidth
+  const left = fitsRight ? lineAt + LABEL_GAP : lineAt - LABEL_GAP - labelWidth
+  $label.css('left', Math.max(0, Math.min(left, plotWidth - labelWidth)) + 'px')
+  $('#selection-box').toggleClass('flip', !fitsRight)
+}
+
 function updateSelection(events) {
   drawScatter()
 
   const width = (state.maxRain / RAIN_MAX_MM) * 100
-  $('#selection-box')
-    .css('width', width + '%')
-    .toggleClass('flip', width > 60)
+  $('#selection-box').css('width', width + '%')
+  placeSelectionLabel()
 
   const selected = events.filter(isSelected)
   $('#selection-title').text(
@@ -617,7 +630,10 @@ $('#clear-selection').on('click', function () {
   fitMap()
 })
 
-new ResizeObserver(drawScatter).observe(document.getElementById('scatter-canvas'))
+new ResizeObserver(function () {
+  drawScatter()
+  placeSelectionLabel()
+}).observe(document.getElementById('scatter-canvas'))
 
 $('#last-updated').text('Loading live data…')
 loadData(1)
