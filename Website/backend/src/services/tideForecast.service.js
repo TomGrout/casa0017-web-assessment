@@ -14,7 +14,7 @@ import axios from 'axios';
 /** @typedef {import('../types').TidalEvent} TidalEvent */
 /** @typedef {import('../types').TideStation} TideStation */
 
-const EASYTIDE_BASE_URL = 'https://easytide.admiralty.co.uk';
+const EASYTIDE_BASE_URL = process.env.EASYTIDE_BASE_URL || 'https://easytide.admiralty.co.uk';
 
 const client = axios.create({
   baseURL: EASYTIDE_BASE_URL,

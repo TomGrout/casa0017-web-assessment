@@ -1,0 +1,27 @@
+/* Live map pages: a slim site header (team nav-bar component) on top; on live.html the map
+   and its panels fill the rest of the window inside #stage. --topbar-h is measured by live-layout.js. */
+.live-topbar {
+  display: flex; align-items: center; gap: 8px 24px; flex-wrap: wrap;
+  padding: 10px 20px; background: #0f1f33; color: #fff;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+.live-brand { color: #fff; font-weight: 800; font-size: 1.1rem; text-decoration: none; white-space: nowrap; }
+.live-nav nav ul { display: flex; flex-wrap: wrap; gap: 4px 18px; list-style: none; margin: 0; padding: 0; }
+.live-nav nav a { color: #b8c4d0; text-decoration: none; font-weight: 600; font-size: 0.9375rem; padding: 4px 0; border-bottom: 2px solid transparent; }
+.live-nav nav a:hover { color: #fff; }
+.live-nav nav a[aria-current='page'] { color: #fff; border-bottom-color: #5cc8dc; }
+.live-updated { margin-left: auto; font-size: 0.8125rem; color: #b8c4d0; white-space: nowrap; }
+.live-updated:empty { display: none; }
+
+body.live-page { margin: 0; height: 100%; overflow: hidden; }
+body.live-page .live-topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; }
+#stage { position: fixed; left: 0; right: 0; bottom: 0; top: var(--topbar-h, 48px); overflow: hidden; }
+/* club-website embeds show only the card / map */
+body.embed .live-topbar { display: none; }
+body.embed #stage { top: 0; }
+@media (max-width: 700px) {
+  .live-topbar { padding: 8px 12px; gap: 4px 14px; }
+  .live-nav nav ul { gap: 2px 14px; }
+  .live-nav nav a { font-size: 0.875rem; }
+  .live-updated { display: none; } /* the status card shows the data age on phones */
+}

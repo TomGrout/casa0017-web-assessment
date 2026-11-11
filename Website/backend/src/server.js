@@ -4,6 +4,8 @@ import { testConnection } from './db/db.js';
 import { initIngestionCron } from './jobs/startIngestion.js';
 import http from 'node:http';
 import { initSocket } from './sockets/socket.js';
+import { ensureRiverTables } from './db/initRiver.js';
+import { initRiverAlertsCron } from './jobs/riverAlerts.js';
 
 async function startServer() {
   try {
@@ -16,7 +18,15 @@ async function startServer() {
     const httpServer = http.createServer(app);
     initSocket(httpServer);
 
-    initIngestionCron();
+    if (config.cron.enabled) {
+      initIngestionCron();
+    } else {
+      console.log('[JOBS] Ingestion cron disabled (CRON_ENABLED=false)');
+    }
+
+    // Live map (river users): river_* tables + model run / WhatsApp updates (RIVER_ALERTS_ENABLED)
+    await ensureRiverTables();
+    initRiverAlertsCron();
 
     httpServer.listen(config.port, () => {
       console.log('Server and WebSockets listening...')
