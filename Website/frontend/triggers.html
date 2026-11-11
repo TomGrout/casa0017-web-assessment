@@ -58,8 +58,9 @@
         <div>
           <h1>What sets them off?</h1>
           <p class="intro">
-            The rain that fell in the 24 hours before each spill in London. Move the slider under
-            the chart to pick out spills and see which outfalls they came from.
+            Rain, but often not much of it. Each dot is a spill in London since January 2024, placed
+            by the rain in the 24 hours before it and how long it lasted. Move the slider to pick
+            out spills and see where they came from.
           </p>
         </div>
 
@@ -70,13 +71,13 @@
           >
             <input type="checkbox" id="wet-only" />
             <span class="switch-track"></span>
-            Wet catchment only
+            Rained the day before
           </label>
 
           <select class="filter-box" id="river-select" aria-label="River">
             <option value="all">All rivers</option>
             <option value="lea">River Lea</option>
-            <option value="thames">Thames and others</option>
+            <option value="thames">Rest of London</option>
           </select>
 
           <select class="filter-box" id="outfall-select" aria-label="Outfall">
@@ -95,6 +96,7 @@
             </div>
           </div>
 
+          <p class="y-title">How long the spill lasted</p>
           <div class="chart">
             <div class="y-axis">
               <span>20+ h</span><span>15</span><span>10</span><span>5</span><span>0</span>
@@ -172,7 +174,7 @@
           <div class="stat">
             <div class="gauge"><div class="gauge-fill" id="gauge-fill"></div></div>
             <div>
-              <p class="stat-label" id="stat-label">After 4 mm of rain or less</p>
+              <p class="stat-label" id="stat-label">Spills after 4 mm of rain or less</p>
               <p class="stat-number is-empty" id="stat-number">--%</p>
             </div>
           </div>
@@ -184,6 +186,13 @@
         </div>
       </section>
     </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <p>Rain To Spill is a CASA0017 group project at UCL.</p>
+        <p>Data from Thames Water, the Environment Agency and Open-Meteo.</p>
+      </div>
+    </footer>
 
     <script
       src="https://code.jquery.com/jquery-3.7.1.min.js"

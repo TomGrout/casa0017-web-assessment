@@ -29,7 +29,13 @@ p {
 }
 
 .page {
-  padding: 28px 32px 40px;
+  padding: 28px 32px 48px;
+}
+
+.y-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--muted);
 }
 
 .page-header {
@@ -279,6 +285,10 @@ h2 {
   white-space: nowrap;
 }
 
+.x-axis span:last-child {
+  justify-content: flex-end;
+}
+
 .axis-title {
   text-align: center;
   font-size: 14px;
@@ -520,7 +530,30 @@ h2 {
   }
 }
 
+.footer {
+  padding: 28px 0;
+  background: var(--navy);
+  color: #c9d3dd;
+  font-size: 15px;
+}
+
+.footer-inner {
+  padding: 0 32px;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer p + p {
+  margin-top: 4px;
+}
+
 @media (max-width: 700px) {
+  .footer-inner {
+    padding: 0 16px;
+  }
+
   .page {
     padding-left: 16px;
     padding-right: 16px;
@@ -543,6 +576,10 @@ h2 {
   .selection-label {
     width: 170px;
     font-size: 13px;
+  }
+
+  .x-axis span:nth-child(even) {
+    visibility: hidden;
   }
 
   .ranking {

@@ -5,11 +5,11 @@ import { LONDON_BBOX, inLondon, insidePolygon, tidyName } from '../data/helpers.
 
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api'
 
-const RIVER_NAMES = { lea: 'River Lea', thames: 'Thames and others' }
+const RIVER_NAMES = { lea: 'River Lea', thames: 'Rest of London' }
 const ALL_OUTFALLS = {
   all: 'All London outfalls',
   lea: 'All River Lea outfalls',
-  thames: 'All Thames and other outfalls',
+  thames: 'All outfalls in the rest of London',
 }
 const LEA_LABEL = /\bRiver (Lea|Lee)\b|Bow Creek/i
 
@@ -285,7 +285,7 @@ function updateRanking(bySite) {
 function updateStat(events, bySite) {
   const everything = state.maxRain >= RAIN_MAX_MM
   $('#stat-label').text(
-    everything ? 'All spills, whatever the rain' : 'After ' + rainOrLess(state.maxRain)
+    everything ? 'All spills, whatever the rain' : 'Spills after ' + rainOrLess(state.maxRain)
   )
 
   if (events.length === 0) {
