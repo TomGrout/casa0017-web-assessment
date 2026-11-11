@@ -1,12 +1,10 @@
 /* global $ */
 
-import { LONDON_BOUNDARY } from '../data/london.js'
+import { LONDON_BBOX, inLondon, tidyName } from '../data/helpers.js'
 import { TIDE_START, TIDE_TYPES, TIDE_STEPS } from '../data/tides.js'
 
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api'
 
-const LONDON_BBOX = '-0.52,51.28,0.35,51.70'
-const EDGE_TOLERANCE_M = 250
 const LOAD_ATTEMPTS = 3
 
 // The Thames is tidal below Teddington Lock, which is at about this latitude
@@ -22,7 +20,6 @@ const STALE_READING_MS = 90 * MINUTE_MS
 const TOP_ROWS = 8
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const ORDINALS = ['1st', '2nd', '3rd', '4th', '5th', '6th']
-const KEEP_UPPER = ['CSO', 'PS', 'SR', 'STW', 'WWTW', 'SPS']
 
 // The river sketch: distances along the Thames from Teddington, in km (rounded)
 const STRIP_KM = 55
@@ -85,58 +82,8 @@ function tideAt(time) {
   }
 }
 
-function insidePolygon(point, polygon) {
-  const [x, y] = point
-  let inside = false
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const [x1, y1] = polygon[i]
-    const [x2, y2] = polygon[j]
-    if (y1 > y !== y2 > y && x < ((x2 - x1) * (y - y1)) / (y2 - y1) + x1) {
-      inside = !inside
-    }
-  }
-  return inside
-}
-
-function metresToEdge(point, polygon) {
-  const kx = 111320 * Math.cos((51.5 * Math.PI) / 180)
-  const ky = 110540
-  const px = point[0] * kx
-  const py = point[1] * ky
-  let best = Infinity
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const ax = polygon[j][0] * kx
-    const ay = polygon[j][1] * ky
-    const dx = polygon[i][0] * kx - ax
-    const dy = polygon[i][1] * ky - ay
-    const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)))
-    best = Math.min(best, Math.hypot(px - ax - t * dx, py - ay - t * dy))
-  }
-  return best
-}
-
-function inLondon(point) {
-  return (
-    insidePolygon(point, LONDON_BOUNDARY) || metresToEdge(point, LONDON_BOUNDARY) < EDGE_TOLERANCE_M
-  )
-}
-
 function isTidalThames(river, point) {
   return /River Thames/.test(river) && !/Tributary/.test(river) && point[1] >= TEDDINGTON_LAT
-}
-
-function tidyName(name) {
-  return name
-    .trim()
-    .replace(/,$/, '')
-    .split(' ')
-    .map(function (word) {
-      if (KEEP_UPPER.includes(word.toUpperCase())) {
-        return word.toUpperCase()
-      }
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-    })
-    .join(' ')
 }
 
 function monthKey(time) {

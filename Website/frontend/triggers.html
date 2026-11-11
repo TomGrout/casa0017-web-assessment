@@ -151,7 +151,11 @@
                 <th>Rank</th>
                 <th>Outfall</th>
                 <th>Area</th>
-                <th>Lowest rain before a spill</th>
+                <th
+                  title="The middle value: half of the outfall's spills came after less rain than this"
+                >
+                  Usual rain before a spill
+                </th>
                 <th>Spills</th>
                 <th>Status now</th>
               </tr>
@@ -168,13 +172,11 @@
           <div class="stat">
             <div class="gauge"><div class="gauge-fill" id="gauge-fill"></div></div>
             <div>
-              <p class="stat-label">Lowest rain before a spill</p>
-              <p class="stat-number is-empty" id="stat-number">-- mm</p>
+              <p class="stat-label" id="stat-label">After 4 mm of rain or less</p>
+              <p class="stat-number is-empty" id="stat-number">--%</p>
             </div>
           </div>
-          <p class="stat-text" id="stat-text">
-            At --, --. Your selection holds -- spills from -- outfalls.
-          </p>
+          <p class="stat-text" id="stat-text">-- of -- spills, from -- of -- outfalls.</p>
           <div class="stat-buttons">
             <a class="button-primary" href="/tide.html">See where it goes</a>
             <button class="button-outline" id="clear-selection">Clear selection</button>

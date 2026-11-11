@@ -1,11 +1,9 @@
 /* global $, maplibregl */
 
-import { LONDON_BOUNDARY, LEA_CATCHMENT } from '../data/london.js'
+import { LEA_CATCHMENT } from '../data/london.js'
+import { LONDON_BBOX, inLondon, insidePolygon, tidyName } from '../data/helpers.js'
 
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api'
-
-const LONDON_BBOX = '-0.52,51.28,0.35,51.70'
-const EDGE_TOLERANCE_M = 250
 
 const RIVER_NAMES = { lea: 'River Lea', thames: 'Thames and others' }
 const ALL_OUTFALLS = {
@@ -20,6 +18,7 @@ const HOURS_MAX = 20
 const DEFAULT_RAIN_MM = 4
 const WET_PRIOR_MM = 2
 const TOP_ROWS = 5
+const MIN_SPILLS_TO_RANK = 5
 const LOAD_ATTEMPTS = 3
 
 const state = {
@@ -42,53 +41,25 @@ function formatMm(mm) {
   return Number(mm.toFixed(1)) + ' mm'
 }
 
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+function rainOrLess(mm) {
+  return mm === 0 ? 'no rain at all' : formatMm(mm) + ' of rain or less'
+}
+
+function count(n) {
+  return n.toLocaleString('en-GB')
 }
 
 function plural(n, word) {
-  return n + ' ' + word + (n === 1 ? '' : 's')
+  return count(n) + ' ' + word + (n === 1 ? '' : 's')
 }
 
-function insidePolygon(point, polygon) {
-  const [x, y] = point
-  let inside = false
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const [x1, y1] = polygon[i]
-    const [x2, y2] = polygon[j]
-    if (y1 > y !== y2 > y && x < ((x2 - x1) * (y - y1)) / (y2 - y1) + x1) {
-      inside = !inside
-    }
-  }
-  return inside
-}
-
-function metresToEdge(point, polygon) {
-  const kx = 111320 * Math.cos((51.5 * Math.PI) / 180)
-  const ky = 110540
-  const px = point[0] * kx
-  const py = point[1] * ky
-  let best = Infinity
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const ax = polygon[j][0] * kx
-    const ay = polygon[j][1] * ky
-    const dx = polygon[i][0] * kx - ax
-    const dy = polygon[i][1] * ky - ay
-    const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)))
-    best = Math.min(best, Math.hypot(px - ax - t * dx, py - ay - t * dy))
-  }
-  return best
-}
-
-// The boundary is clipped to the river bank, so outfalls on the Thames sit just outside it
-function inLondon(point) {
-  return (
-    insidePolygon(point, LONDON_BOUNDARY) || metresToEdge(point, LONDON_BOUNDARY) < EDGE_TOLERANCE_M
-  )
+// The middle value: half of the numbers are lower and half are higher
+function median(numbers) {
+  const sorted = numbers.slice().sort(function (a, b) {
+    return a - b
+  })
+  const middle = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 1 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2
 }
 
 // Tributaries such as Pymmes Brook flow into the Lea, so fall back on where they are
@@ -132,12 +103,15 @@ function summarise(events) {
       river: e.river,
       spills: 0,
       selected: 0,
-      lowestRain: Infinity,
+      rains: [],
     }
     row.spills = row.spills + 1
     row.selected = row.selected + (isSelected(e) ? 1 : 0)
-    row.lowestRain = Math.min(row.lowestRain, e.rain24h)
+    row.rains.push(e.rain24h)
     bySite.set(e.site, row)
+  })
+  bySite.forEach(function (row) {
+    row.usualRain = median(row.rains)
   })
   return bySite
 }
@@ -200,7 +174,7 @@ function updateSelection(events) {
   $('#selection-title').text(
     state.maxRain >= RAIN_MAX_MM
       ? 'All ' + plural(selected.length, 'spill')
-      : plural(selected.length, 'spill') + ' after ' + formatMm(state.maxRain) + ' of rain or less'
+      : plural(selected.length, 'spill') + ' after ' + rainOrLess(state.maxRain)
   )
   $('#scatter').attr(
     'aria-label',
@@ -239,16 +213,20 @@ function updateMap(bySite) {
         spills: row.spills,
         selected: row.selected,
         dimmed: state.site !== 'all' && site.key !== state.site,
-        lowestRain: row.lowestRain,
+        usualRain: row.usualRain,
       },
     })
   })
   map.getSource('outfalls').setData({ type: 'FeatureCollection', features: features })
 }
 
+// Ranked by the usual rain before a spill. Outfalls with only a few spills go last,
+// because one spill on a dry day would otherwise put them first.
 function rankSites(bySite) {
   return Array.from(bySite.values()).sort(function (a, b) {
-    return a.lowestRain - b.lowestRain || b.spills - a.spills
+    const aFew = a.spills < MIN_SPILLS_TO_RANK ? 1 : 0
+    const bFew = b.spills < MIN_SPILLS_TO_RANK ? 1 : 0
+    return aFew - bFew || a.usualRain - b.usualRain || b.spills - a.spills
   })
 }
 
@@ -267,7 +245,7 @@ function updateRanking(bySite) {
   const shown = state.showAll ? rows : rows.slice(0, TOP_ROWS)
   shown.forEach(function (row, i) {
     const site = state.sites.get(row.site)
-    const barWidth = Math.min(row.lowestRain / RAIN_MAX_MM, 1) * 100
+    const barWidth = Math.min(row.usualRain / RAIN_MAX_MM, 1) * 100
     const $name = $('<td>').text(row.name)
     if (site.pipes > 1) {
       $name.append($('<span class="pipes">').text(site.pipes + ' overflow pipes'))
@@ -280,7 +258,7 @@ function updateRanking(bySite) {
       .append($('<td>').text(RIVER_NAMES[row.river]))
       .append(
         $('<td>')
-          .text(formatMm(row.lowestRain))
+          .text(formatMm(row.usualRain))
           .append(
             $('<span class="bar"><span class="bar-fill"></span></span>')
               .find('.bar-fill')
@@ -288,7 +266,7 @@ function updateRanking(bySite) {
               .end()
           )
       )
-      .append($('<td>').text(row.spills))
+      .append($('<td>').text(count(row.spills)))
       .append(
         $('<td>').append(
           $('<span class="badge">')
@@ -305,38 +283,38 @@ function updateRanking(bySite) {
 }
 
 function updateStat(events, bySite) {
+  const everything = state.maxRain >= RAIN_MAX_MM
+  $('#stat-label').text(
+    everything ? 'All spills, whatever the rain' : 'After ' + rainOrLess(state.maxRain)
+  )
+
   if (events.length === 0) {
-    $('#stat-number').text('-- mm').addClass('is-empty')
+    $('#stat-number').text('--%').addClass('is-empty')
     $('#gauge-fill').css('height', 0)
     $('#stat-text').text('No spills match these filters.')
     return
   }
 
-  const top = rankSites(bySite)[0]
-  const lowest = events
-    .filter(function (e) {
-      return e.site === top.site && e.rain24h === top.lowestRain
-    })
-    .reduce(function (a, b) {
-      return b.start > a.start ? b : a
-    })
   const selected = events.filter(isSelected)
   let sitesInSelection = 0
   bySite.forEach(function (row) {
     sitesInSelection = sitesInSelection + (row.selected > 0 ? 1 : 0)
   })
 
-  $('#stat-number').text(formatMm(lowest.rain24h)).removeClass('is-empty')
-  $('#gauge-fill').css('height', Math.min(lowest.rain24h / RAIN_MAX_MM, 1) * 100 + '%')
+  const share = (100 * selected.length) / events.length
+  const rounded = Math.round(share)
+  $('#stat-number')
+    .text(share > 0 && rounded === 0 ? 'under 1%' : rounded + '%')
+    .removeClass('is-empty')
+  $('#gauge-fill').css('height', share + '%')
   $('#stat-text').text(
-    'At ' +
-      lowest.name +
-      ', ' +
-      formatDate(lowest.start) +
-      '. Your selection holds ' +
-      plural(selected.length, 'spill') +
-      ' from ' +
-      plural(sitesInSelection, 'outfall') +
+    count(selected.length) +
+      ' of ' +
+      plural(events.length, 'spill') +
+      ', from ' +
+      count(sitesInSelection) +
+      ' of ' +
+      plural(bySite.size, 'outfall') +
       '.'
   )
 }
@@ -484,7 +462,7 @@ function startMap() {
           lines.push($('<span>').text(p.pipes + ' overflow pipes'))
         }
         lines.push($('<span>').text(p.selected + ' of ' + plural(p.spills, 'spill') + ' selected'))
-        lines.push($('<span>').text('Lowest rain: ' + formatMm(Number(p.lowestRain))))
+        lines.push($('<span>').text('Usually after ' + formatMm(Number(p.usualRain)) + ' of rain'))
         if (p.spilling) {
           lines.push($('<span class="popup-spilling">').text('Spilling now'))
         }
@@ -521,7 +499,7 @@ function showData(scatterResponse, geojsonResponse) {
     if (!inLondon(point)) {
       return
     }
-    const name = f.properties.locationName.trim().replace(/,$/, '')
+    const name = tidyName(f.properties.locationName)
     const key = siteKey(name, point)
     const site = state.sites.get(key) || {
       key: key,

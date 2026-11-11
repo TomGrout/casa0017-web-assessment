@@ -549,8 +549,24 @@ h2 {
     font-size: 14px;
   }
 
+  .ranking th:nth-child(1),
+  .ranking td:nth-child(1),
+  .ranking th:nth-child(3),
+  .ranking td:nth-child(3) {
+    display: none;
+  }
+
+  .ranking td {
+    padding: 12px 6px;
+  }
+
+  .badge {
+    padding: 3px 8px;
+    font-size: 13px;
+  }
+
   .bar {
-    width: 60px;
+    display: none;
   }
 
   .stat-number {
