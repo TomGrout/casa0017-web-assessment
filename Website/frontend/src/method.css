@@ -149,7 +149,32 @@ h3 {
   overflow-wrap: anywhere;
 }
 
+.footer {
+  padding: 28px 0;
+  background: var(--navy);
+  color: #c9d3dd;
+  font-size: 15px;
+}
+
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer p + p {
+  margin-top: 4px;
+}
+
 @media (max-width: 700px) {
+  .footer-inner {
+    padding: 0 16px;
+  }
+
   .page {
     padding-left: 16px;
     padding-right: 16px;
