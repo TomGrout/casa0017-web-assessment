@@ -295,10 +295,11 @@ function showBeforeAfter(prefix, events, note) {
   }
 }
 
+// Some sites have several overflow pipes, each with its own permit, so group them by place
 function showOutfalls(tidal) {
   const rows = new Map()
   tidal.forEach(function (event) {
-    const row = rows.get(event.permit) || {
+    const row = rows.get(event.site) || {
       name: event.name,
       spills: 0,
       timed: 0,
@@ -316,7 +317,7 @@ function showOutfalls(tidal) {
     } else {
       row.since += 1
     }
-    rows.set(event.permit, row)
+    rows.set(event.site, row)
   })
 
   const sorted = Array.from(rows.values()).sort(function (a, b) {
@@ -371,8 +372,10 @@ function showData(scatter, geojson) {
   geojson.features.forEach(function (feature) {
     const point = feature.geometry.coordinates
     if (inLondon(point)) {
+      const name = tidyName(feature.properties.locationName)
       outfalls.set(feature.properties.permitNumber, {
-        name: tidyName(feature.properties.locationName),
+        name: name,
+        site: name.toUpperCase() + '|' + point[0].toFixed(4) + ',' + point[1].toFixed(4),
         tidal: isTidalThames(feature.properties.river || '', point),
       })
     }
@@ -387,7 +390,7 @@ function showData(scatter, geojson) {
     }
     const start = new Date(row.startTime).getTime()
     const event = {
-      permit: row.permitNumber,
+      site: outfall.site,
       name: outfall.name,
       start: start,
       end: start + Number(row.durationHours) * HOUR_MS,
