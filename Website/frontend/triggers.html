@@ -104,10 +104,16 @@
 
             <div class="plot-area" id="scatter" role="img" aria-label="Scatter chart of spills">
               <canvas class="scatter-canvas" id="scatter-canvas"></canvas>
+              <div class="brush-box" id="brush-box">
+                <div class="brush-label">
+                  <strong id="brush-title"></strong>
+                  <span>Click the chart or press Esc to go back to the slider</span>
+                </div>
+              </div>
               <div class="selection-box" id="selection-box">
                 <div class="selection-label">
                   <strong id="selection-title">-- spills after 4 mm of rain or less</strong>
-                  <span>Move the slider to widen the selection</span>
+                  <span>Move the slider, or drag a box on the chart</span>
                 </div>
               </div>
 

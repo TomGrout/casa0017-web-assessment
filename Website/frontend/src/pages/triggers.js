@@ -30,6 +30,8 @@ const state = {
   site: 'all',
   maxRain: DEFAULT_RAIN_MM,
   showAll: false,
+  // Box dragged on the scatter, in chart units (mm of rain and hours), or null when unused
+  brush: null,
 }
 
 let map = null
@@ -92,7 +94,37 @@ function filteredEvents(anySite) {
 }
 
 function isSelected(e) {
+  if (state.brush) {
+    return insideBrush(e)
+  }
   return state.maxRain >= RAIN_MAX_MM || e.rain24h <= state.maxRain
+}
+
+// Dots past the edge of the chart are drawn on the edge, so test them there too
+function insideBrush(e) {
+  const b = state.brush
+  const rain = Math.min(e.rain24h, RAIN_MAX_MM)
+  const hours = Math.min(e.hours, HOURS_MAX)
+  return rain >= b.rainMin && rain <= b.rainMax && hours >= b.hoursMin && hours <= b.hoursMax
+}
+
+function hoursText(h) {
+  return Number(h.toFixed(1)) + (h >= HOURS_MAX ? '+' : '') + ' h'
+}
+
+// Describes the dragged box in words, e.g. "2–6 mm of rain, lasting 1–4 h"
+function brushText() {
+  const b = state.brush
+  const rainTo = b.rainMax >= RAIN_MAX_MM ? RAIN_MAX_MM + '+ mm' : formatMm(b.rainMax)
+  return (
+    Number(b.rainMin.toFixed(1)) +
+    '–' +
+    rainTo +
+    ' of rain, lasting ' +
+    Number(b.hoursMin.toFixed(1)) +
+    '–' +
+    hoursText(b.hoursMax)
+  )
 }
 
 function summarise(events) {
@@ -179,11 +211,14 @@ function placeSelectionLabel() {
 function updateSelection(events) {
   drawScatter()
 
+  const selected = events.filter(isSelected)
+  $('#selection-box').toggleClass('is-hidden', state.brush !== null)
+  showBrush(selected.length)
+
   const width = (state.maxRain / RAIN_MAX_MM) * 100
   $('#selection-box').css('width', width + '%')
   placeSelectionLabel()
 
-  const selected = events.filter(isSelected)
   $('#selection-title').text(
     state.maxRain >= RAIN_MAX_MM
       ? 'All ' + plural(selected.length, 'spill')
@@ -296,10 +331,12 @@ function updateRanking(bySite) {
 }
 
 function updateStat(events, bySite) {
-  const everything = state.maxRain >= RAIN_MAX_MM
-  $('#stat-label').text(
-    everything ? 'All spills, whatever the rain' : 'Spills after ' + rainOrLess(state.maxRain)
-  )
+  const everything = state.brush === null && state.maxRain >= RAIN_MAX_MM
+  let label = everything ? 'All spills, whatever the rain' : 'Spills after ' + rainOrLess(state.maxRain)
+  if (state.brush) {
+    label = 'Spills after ' + brushText()
+  }
+  $('#stat-label').text(label)
 
   if (events.length === 0) {
     $('#stat-number').text('--%').addClass('is-empty')
@@ -583,6 +620,7 @@ function loadData(attempt) {
 
 $('#rain-slider').on('input', function () {
   state.maxRain = Number(this.value)
+  state.brush = null
   render(false)
 })
 
@@ -621,6 +659,7 @@ $('#clear-selection').on('click', function () {
   state.site = 'all'
   state.maxRain = DEFAULT_RAIN_MM
   state.showAll = false
+  state.brush = null
   $('#river-select').val('all')
   $('#wet-only').prop('checked', false)
   $('#rain-slider').val(DEFAULT_RAIN_MM)
@@ -628,6 +667,111 @@ $('#clear-selection').on('click', function () {
   $('#outfall-select').val('all')
   render(true)
   fitMap()
+})
+
+// ---- Drag a box on the scatter to select spills (linked brushing) ----
+// The box is kept in chart units, so it stays in the right place if the chart resizes.
+
+const MIN_DRAG_PX = 6
+let drag = null
+
+function plotPoint(event) {
+  const rect = document.getElementById('scatter').getBoundingClientRect()
+  return {
+    x: Math.max(0, Math.min(event.clientX - rect.left, rect.width)),
+    y: Math.max(0, Math.min(event.clientY - rect.top, rect.height)),
+    width: rect.width,
+    height: rect.height,
+  }
+}
+
+// Turns a box in pixels into a range of rain (mm) and spill length (hours)
+function pixelsToBrush(a, b) {
+  const left = Math.min(a.x, b.x)
+  const right = Math.max(a.x, b.x)
+  const top = Math.min(a.y, b.y)
+  const bottom = Math.max(a.y, b.y)
+  return {
+    rainMin: (left / a.width) * RAIN_MAX_MM,
+    rainMax: (right / a.width) * RAIN_MAX_MM,
+    hoursMin: ((a.height - bottom) / a.height) * HOURS_MAX,
+    hoursMax: ((a.height - top) / a.height) * HOURS_MAX,
+  }
+}
+
+function placeBox(b) {
+  // Near the top of the chart there is no room above the box, so put the label below it
+  $('#brush-box').toggleClass('label-below', b.hoursMax / HOURS_MAX > 0.7)
+  // On the right half of the chart, line the label up with the box's right edge
+  $('#brush-box').toggleClass('label-right', (b.rainMin + b.rainMax) / 2 / RAIN_MAX_MM > 0.5)
+  $('#brush-box').css({
+    left: (b.rainMin / RAIN_MAX_MM) * 100 + '%',
+    width: ((b.rainMax - b.rainMin) / RAIN_MAX_MM) * 100 + '%',
+    top: (1 - b.hoursMax / HOURS_MAX) * 100 + '%',
+    height: ((b.hoursMax - b.hoursMin) / HOURS_MAX) * 100 + '%',
+  })
+}
+
+function showBrush(selectedCount) {
+  const $box = $('#brush-box')
+  if (!state.brush) {
+    $box.removeClass('is-visible')
+    return
+  }
+  placeBox(state.brush)
+  $box.addClass('is-visible')
+  $('#brush-title').text(plural(selectedCount, 'spill') + ' after ' + brushText())
+}
+
+function clearBrush() {
+  if (state.brush) {
+    state.brush = null
+    render(false)
+  }
+}
+
+$('#scatter')
+  .on('pointerdown', function (event) {
+    if (state.events.length === 0 || event.button > 0) {
+      return
+    }
+    drag = { start: plotPoint(event) }
+    this.setPointerCapture(event.pointerId)
+    $('#brush-title').text('')
+  })
+  .on('pointermove', function (event) {
+    if (!drag) {
+      return
+    }
+    const now = plotPoint(event)
+    if (Math.abs(now.x - drag.start.x) + Math.abs(now.y - drag.start.y) < MIN_DRAG_PX) {
+      return
+    }
+    drag.moved = true
+    $('#selection-box').addClass('is-hidden')
+    placeBox(pixelsToBrush(drag.start, now))
+    $('#brush-box').addClass('is-visible')
+  })
+  .on('pointerup pointercancel', function (event) {
+    if (!drag) {
+      return
+    }
+    const moved = drag.moved
+    const start = drag.start
+    drag = null
+    if (!moved) {
+      // A simple click on the chart clears the box and goes back to the slider
+      clearBrush()
+      return
+    }
+    state.brush = pixelsToBrush(start, plotPoint(event))
+    render(false)
+  })
+
+$(document).on('keydown', function (event) {
+  if (event.key === 'Escape') {
+    clearBrush()
+  }
 })
 
 new ResizeObserver(function () {
