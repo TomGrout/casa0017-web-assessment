@@ -144,7 +144,11 @@ export const CONFIG = {
     recentBoost: 1.3,    // multiply p if site spilled in last 48 h (wet catchment)
     minRainMm: 2,        // below this accumulated rain, p = 0 (no dry spills)
     minProbability: 0.05, // ignore forecast hours below this chance
-    gridDp: 2,           // round coords to 0.01° to de-duplicate weather calls
+    // Overflows are grouped into weather cells by rounding their position to this many decimal
+    // places: 1 = 0.1° (about 7 x 11 km, close to the forecast model's own grid), 2 = 0.01°.
+    // Each cell is one Open-Meteo location, and the free service allows under 10,000 a day,
+    // so 2 can use up the day's allowance within a few hours.
+    gridDp: 1,
     forecastDays: 8,     // Open-Meteo forecast_days (max 16); 8 covers +168 h
     // Per-overflow rainfall thresholds from the team's analysis
     // (backend getRainfallThresholds(): lowest and average 24-h rain before each

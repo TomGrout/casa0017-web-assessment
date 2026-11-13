@@ -249,6 +249,10 @@ export async function loadThresholds() {
 // ---------------------------------------------------------- bundle
 let cache = null;
 let inflight = null;
+// [PARAM] how long one rain forecast is reused, and how old a copy may be used if Open-Meteo fails
+const RAIN_CACHE_MINUTES = Number(process.env.RIVER_RAIN_CACHE_MINUTES) || 60;
+const RAIN_STALE_HOURS = Number(process.env.RIVER_RAIN_STALE_HOURS) || 6;
+let rainCache = null; // { at, value }
 
 /** Everything the model needs, cached. `force` skips the cache (used by the alerts job). */
 export async function getRiverInputs({ force = false } = {}) {
@@ -264,13 +268,27 @@ export async function getRiverInputs({ force = false } = {}) {
     if (ovf.value.source !== 'live') problems.push('Thames Water EDM (using cached status)');
     if (gauges.status !== 'fulfilled') problems.push('EA flow');
     const overflows = ovf.value.items;
+    // Rain forecast: kept for RAIN_CACHE_MINUTES (the forecast itself only changes hourly, and
+    // Open-Meteo's free service allows under 10,000 calls a day, with each location counting).
+    // If a fetch fails, the last good copy is used for up to RAIN_STALE_HOURS.
     let rain = null;
-    try {
-      const near = overflows.filter((o) => snapToRiver(river, o.position).offKm <= CONFIG.river.snapMaxKm);
-      rain = await loadRainForecast(near.map((o) => o.position));
-    } catch (err) {
-      problems.push('rain forecast');
-      console.warn('[RiverInputs] Open-Meteo unavailable:', err.message);
+    if (rainCache && now - rainCache.at < RAIN_CACHE_MINUTES * 60e3) {
+      rain = rainCache.value;
+    } else {
+      try {
+        const near = overflows.filter((o) => snapToRiver(river, o.position).offKm <= CONFIG.river.snapMaxKm);
+        rain = await loadRainForecast(near.map((o) => o.position));
+        rainCache = { at: now, value: rain };
+        console.log(`[RiverInputs] rain forecast fetched for ${Object.keys(rain.byKey).length} locations`);
+      } catch (err) {
+        console.warn('[RiverInputs] Open-Meteo unavailable:', err.response?.status ?? '', err.message);
+        if (rainCache && now - rainCache.at < RAIN_STALE_HOURS * 3600e3) {
+          rain = rainCache.value;
+          problems.push(`rain forecast (using a copy from ${Math.round((now - rainCache.at) / 60e3)} min ago)`);
+        } else {
+          problems.push('rain forecast');
+        }
+      }
     }
     const tide = hw.status === 'fulfilled' ? hw.value : { source: 'unknown', quality: 'fallback', times: [now] };
     if (tide.quality !== 'admiralty') problems.push('tide predictions');
