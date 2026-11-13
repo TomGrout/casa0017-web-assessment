@@ -5,7 +5,7 @@
  * this backend already has where possible, and returns it in the shape the
  * shared model (Website/shared/river/model/impact.js) expects:
  *
- *   { now, overflows, gauges, highWaters, rain, propensity, sources }
+ *   { now, overflows, gauges, highWaters, rain, propensity, thresholds, problems }
  *
  * - Overflows: thamesWater.service fetchDischargeStatus() (all watercourses, paged)
  * - Flow:      EA flood-monitoring flow stations on the River Thames
@@ -13,6 +13,8 @@
  * - Tides:     tideForecast.service (ADMIRALTY EasyTide) at London Bridge,
  *              falling back to EA observed tidal levels
  * - Propensity: from the spill_event table (EDM history imported by this repo's scripts)
+ * - Thresholds: analysis.service getRainfallThresholds() — the team's per-overflow
+ *              rainfall thresholds, which set each overflow's forecast spill chance
  *
  * Results are cached for CACHE_MINUTES so many browsers share one set of upstream calls.
  *
@@ -24,6 +26,8 @@ import config from '../config/env.js';
 import { pool } from '../db/db.js';
 import { fetchDischargeStatus } from './thamesWater.service.js';
 import { fetchTideForecast } from './tideForecast.service.js';
+import { getRainfallThresholds } from './analysis.service.js';
+import { getOutfallThresholds } from './threshold.service.js';
 import { CONFIG } from '../../../shared/river/config.js';
 import { normaliseSiteName, parseTime, rainKey } from '../../../shared/river/data/util.js';
 import { river } from './riverModel.service.js';
@@ -205,6 +209,43 @@ export async function loadPropensity() {
   }
 }
 
+// -------------------------------------------------------- thresholds
+/**
+ * Per-overflow rainfall thresholds from the team's analysis: the lowest and
+ * average 24-h rain (rain_24h_mm, nearest rain gauge) before each overflow's
+ * recorded spills, and how many spills that is based on.
+ *   { "<permit number>" and "<normalised site name>": { min, avg, n } }
+ * Uses the same function as GET /api/analysis/rainfall-thresholds, so the map
+ * follows any change the team makes to that analysis; falls back to the
+ * /api/thresholds query if that one fails (e.g. no 48/72-h columns yet).
+ * Keyed by name as well as id for the same reason as loadPropensity().
+ * Empty object (every overflow uses the shared curve) when there is no data.
+ * [PARAM] RIVER_THRESHOLDS_MAX: the most overflows read.
+ */
+const THRESHOLDS_MAX = Number(process.env.RIVER_THRESHOLDS_MAX) || 20000;
+export async function loadThresholds() {
+  let rows = [];
+  try {
+    rows = await getRainfallThresholds({ limit: THRESHOLDS_MAX });
+  } catch (err) {
+    console.warn('[RiverInputs] analysis thresholds unavailable, trying /thresholds query:', err.message);
+    try {
+      rows = (await getOutfallThresholds()).map((r) => ({ ...r, minRain24h: r.minRain24hMm, avgRain24h: r.avgRain24hMm }));
+    } catch (err2) {
+      console.warn('[RiverInputs] rainfall thresholds unavailable:', err2.message);
+      return {};
+    }
+  }
+  const out = {};
+  for (const r of rows) {
+    const t = { min: Number(r.minRain24h), avg: Number(r.avgRain24h), n: Number(r.spillCount) };
+    if (!Number.isFinite(t.min) || !Number.isFinite(t.avg) || !(t.n > 0)) continue;
+    out[r.permitNumber] = t;
+    if (r.locationName) out[normaliseSiteName(r.locationName)] ??= t;
+  }
+  return out;
+}
+
 // ---------------------------------------------------------- bundle
 let cache = null;
 let inflight = null;
@@ -216,7 +257,7 @@ export async function getRiverInputs({ force = false } = {}) {
   inflight = (async () => {
     const now = Date.now();
     const problems = [];
-    const [ovf, gauges, hw, prop] = await Promise.allSettled([loadOverflows(), loadThamesFlowGauges(), loadHighWaters(), loadPropensity()]);
+    const [ovf, gauges, hw, prop, thr] = await Promise.allSettled([loadOverflows(), loadThamesFlowGauges(), loadHighWaters(), loadPropensity(), loadThresholds()]);
     if (ovf.status !== 'fulfilled' || !ovf.value.items.length) {
       throw new Error(`Thames Water EDM unavailable${ovf.reason ? `: ${ovf.reason.message}` : ''}`);
     }
@@ -238,6 +279,7 @@ export async function getRiverInputs({ force = false } = {}) {
       gauges: gauges.status === 'fulfilled' ? gauges.value : [],
       highWaters: tide, rain,
       propensity: prop.status === 'fulfilled' ? prop.value : {},
+      thresholds: thr.status === 'fulfilled' ? thr.value : {},
       problems,
     };
     return cache;

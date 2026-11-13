@@ -5,6 +5,14 @@
 // =====================================================================
 
 export const CONFIG = {
+  // -------------------------------------------------------------- brand
+  // The map's name and slogan, used by the share image, club embed and WhatsApp messages.
+  // The same two texts are also written directly in Website/frontend/live.html (page title,
+  // description, panel heading, start card, About box): change them there too.
+  brand: {
+    name: 'Live ThameSafe Spill Map',
+    slogan: 'Proactive, speedy and informative sewage risk assessments for Thames River users.',
+  },
   // ---------------------------------------------------------------- map
   map: {
     // Free vector basemap used in the deck.gl MapLibreOverlay docs example.
@@ -138,6 +146,20 @@ export const CONFIG = {
     minProbability: 0.05, // ignore forecast hours below this chance
     gridDp: 2,           // round coords to 0.01° to de-duplicate weather calls
     forecastDays: 8,     // Open-Meteo forecast_days (max 16); 8 covers +168 h
+    // Per-overflow rainfall thresholds from the team's analysis
+    // (backend getRainfallThresholds(): lowest and average 24-h rain before each
+    // overflow's past spills). Where an overflow has one, it replaces the shared
+    // curve above (accumHours / r50mm / slopeMm): the chance of spilling starts
+    // at the overflow's LOWEST recorded trigger rain and reaches half the site's
+    // maximum at its AVERAGE trigger rain. Other overflows keep the shared curve.
+    thresholds: {
+      enabled: true,     // false = shared curve for every overflow
+      windowHours: 24,   // the team's thresholds are 24-h rain totals — keep in step with rain_24h_mm
+      minSpills: 5,      // fewer past spills with rain data than this = not enough evidence, use the shared curve
+      onsetShare: 0.1,   // share of the site's maximum chance at its lowest trigger rain [ASSUMPTION]
+      minSlopeMm: 1,     // limits on how sharply the chance rises (mm of rain)
+      maxSlopeMm: 10,
+    },
   },
 
   // --------------------------------------------- uncertainty (ensemble)
@@ -189,25 +211,34 @@ export const CONFIG = {
     confidence: { high: 0.7, medium: 0.4 },
     // What every light refers to, shown under the status (keep it plain; the methodology has the detail)
     meaning: 'How likely it is that sewage from storm overflows is in the water on this stretch. Sewage carries germs, so it is a health risk if you swallow river water or it gets into cuts.',
+    // advice = what to DO, in a few words. The light and its label already say how likely sewage
+    // is, so the advice does not repeat it.
     levels: {
       low: {
         label: 'Low sewage risk', short: 'Low', colour: '#1e8a4c', text: '#ffffff', icon: '✓', emoji: '🟢',
-        advice: 'No sewage expected. Take your usual care.',
+        advice: 'Take your usual care.',
       },
       moderate: {
         label: 'Moderate sewage risk', short: 'Moderate', colour: '#f2a900', text: '#1a1a1a', icon: '!', emoji: '🟠',
-        advice: 'Sewage likely. Avoid swallowing water and cover cuts.',
+        advice: 'Avoid swallowing water and cover cuts.',
       },
       high: {
         label: 'High sewage risk', short: 'High', colour: '#c62828', text: '#ffffff', icon: '✕', emoji: '🔴',
-        advice: 'Sewage very likely. Consider staying out of the water.',
+        advice: 'Consider staying out of the water.',
       },
     },
   },
 
   // ---------------------------------------------- spots and favourites
   spots: {
-    defaultRadiusKm: 3,
+    // How far up and downstream "your stretch" reaches when a spot is chosen. Must be one of the
+    // choices in the panel's drop-down (1, 3, 5 or 10). Once the user picks a length themselves,
+    // their choice is kept for every later spot.
+    defaultRadiusKm: 3,  // spot from search, "locate me" or a club
+    clickRadiusKm: 3,    // spot from clicking / tapping the river
+    // The map flies to a newly chosen spot and zooms in to at least this level (never zooms out).
+    flyZoom: 12.5,       // search, "locate me", saved spots
+    clickZoom: 12.5,     // clicking / tapping the river
     maxFavourites: 12,
     storageKey: 'thames-spill-map:favourites:v1', // browser localStorage, never sent anywhere
     postcodeLookup: 'https://api.postcodes.io/postcodes/', // free, no key

@@ -1,4 +1,4 @@
-/* Thames Spill Map — layout
+/* Live ThameSafe Spill Map — layout
    ≥ 701px: side panel on the left, spot controls + status card on the map.
    ≤ 700px: bottom sheet with three positions (peek / half / full), controls in thumb reach.
    Text sizes in rem so the user's own browser/phone text size is respected. */
@@ -62,6 +62,8 @@ input[type='range'] { width: 100%; accent-color: var(--accent); }
 /* empty state */
 .empty { border: 2px dashed var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 6px; }
 .empty-title { font-weight: 700; font-size: 1.125rem; }
+.slogan { margin: 0 0 4px; font-style: italic; color: var(--muted); }
+.panel-head h1 { line-height: 1.2; }
 
 /* status card */
 #statusCard { border: 2px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 10px; }
@@ -156,6 +158,8 @@ label.check { display: block; }
 .key.low { background: var(--low); } .key.moderate { background: var(--moderate); color: #1a1a1a; } .key.high { background: var(--high); }
 .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
 .dot.dis { background: var(--dis); } .dot.rec { background: var(--rec); } .dot.fc { background: var(--fc); }
+/* match siteColour() in app.js: quiet overflows are see-through slate, offline monitors pale with a dark ring */
+.dot.quiet { background: rgba(90, 110, 120, 0.6); } .dot.off { background: #c9d0d5; box-shadow: inset 0 0 0 1.5px #5a6e78; }
 .dot.sig { background: var(--sig); box-shadow: 0 0 0 2px #ffd666; } .dot.fav { background: #fff; box-shadow: inset 0 0 0 3px var(--accent); }
 
 .info-card { position: absolute; z-index: 6; left: calc(var(--panel-w) + var(--gap) * 2); top: 70px; width: 320px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.2); padding: 12px 14px; font-size: 0.9375rem; }

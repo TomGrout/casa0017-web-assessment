@@ -28,5 +28,9 @@ export default defineConfig({
     port: 5173,
     open: true,
     fs: { allow: [resolve(import.meta.dirname, '..')] }, // Website/ (frontend + shared)
+    // In Docker on Windows/macOS the dev server is not told when a file changes, so it would keep
+    // serving old code until restarted. VITE_USE_POLLING=true (set in docker-compose.yml) makes it
+    // check the files itself. [PARAM] interval in ms: lower = picks up edits sooner, more CPU.
+    watch: process.env.VITE_USE_POLLING === 'true' ? { usePolling: true, interval: 1000 } : undefined,
   },
 })

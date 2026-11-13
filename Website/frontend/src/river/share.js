@@ -31,8 +31,8 @@ export function outlookCsv(spot, radiusKm, hours) {
     new Date(h.t).toLocaleString('en-GB', { timeZone: 'Europe/London' }), riskInfo(h.risk).label, h.confidence.word,
     h.central.toFixed(4), h.p10.toFixed(4), h.p90.toFixed(4), h.pMod.toFixed(2), h.pHigh.toFixed(2), h.obs.toFixed(4), h.fcst.toFixed(4),
   ]);
-  const meta = [`# Thames Spill Map outlook for ${spot.name ?? spot.place} (±${radiusKm} km), ${spot.position[1].toFixed(4)}, ${spot.position[0].toFixed(4)}`,
-    `# Generated ${fmtT(Date.now())}. Units and method: ${new URL('live-method.html', location.href)}`,
+  const meta = [`# ${CONFIG.brand.name} outlook for ${spot.name ?? spot.place} (±${radiusKm} km), ${spot.position[1].toFixed(4)}, ${spot.position[0].toFixed(4)}`,
+    `# Generated ${fmtT(Date.now())}. Units and method: ${new URL('method.html#live-map', location.href)}`,
     '# Model estimate with uncertainty, not a water test.'];
   return [...meta, head.join(','), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))].join('\n');
 }
@@ -55,8 +55,8 @@ export async function outlookCard(spot, radiusKm, now, days, nextLine) {
 
   g.fillStyle = '#f6f8f9'; g.fillRect(0, 0, W, Hh);
   g.fillStyle = '#0f6b8f'; g.fillRect(0, 0, W, 150);
-  g.fillStyle = '#fff'; g.font = font(700, 54); g.fillText('Thames Spill Map', 60, 92);
-  g.font = font(400, 28); g.fillText('Sewage-overflow outlook for river users', 60, 132);
+  g.fillStyle = '#fff'; g.font = font(700, 54); g.fillText(CONFIG.brand.name, 60, 92);
+  g.font = font(400, 22); g.fillText(trim(g, CONFIG.brand.slogan, W - 120), 60, 130);
 
   g.fillStyle = '#14212b'; g.font = font(700, 46);
   g.fillText(trim(g, spot.name ?? spot.place, W - 120), 60, 230);
@@ -77,7 +77,7 @@ export async function outlookCard(spot, radiusKm, now, days, nextLine) {
   if (nextLine) { g.font = font(600, 30); g.fillText(trim(g, nextLine, W - 120), 60, 700); }
 
   // 7-day lights
-  g.font = font(700, 30); g.fillStyle = '#14212b'; g.fillText('Next 7 days · highest sewage risk each day', 60, 775);
+  g.font = font(700, 30); g.fillStyle = '#14212b'; g.fillText('Next 7 days · Highest sewage risk each day', 60, 775);
   const n = Math.min(8, days.length), cw = (W - 120) / n;
   days.slice(0, n).forEach((d, i) => {
     const x = 60 + i * cw, c = riskInfo(d.risk);
@@ -91,7 +91,7 @@ export async function outlookCard(spot, radiusKm, now, days, nextLine) {
 
   g.fillStyle = '#5b6b77'; g.font = font(400, 22);
   g.fillText('Model estimate with uncertainty, not a water test. Check official bathing-water advice.', 60, 1000);
-  g.fillText(trim(g, `Method: ${new URL('live-method.html', location.href)}`, W - 120), 60, 1034);
+  g.fillText(trim(g, `Method: ${new URL('method.html#live-map', location.href)}`, W - 120), 60, 1034);
   return new Promise((res) => cv.toBlob(res, 'image/png'));
 }
 

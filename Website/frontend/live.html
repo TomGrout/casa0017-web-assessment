@@ -5,13 +5,42 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0f6b8f" />
-    <title>Live map – Thames sewage risk | Rain To Spill</title>
+    <title>Live ThameSafe Spill Map | Rain To Spill</title>
+    <meta name="description" content="Proactive, speedy and informative sewage risk assessments for Thames River users." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/topbar.css" />
   </head>
   <body class="live-page">
-    <header class="live-topbar">
-      <a class="live-brand" href="/">Rain To Spill</a>
-      <div id="siteNav" class="live-nav" data-active="/live.html"></div>
-      <span id="last-updated" class="live-updated" aria-live="polite"></span>
+    <header class="topbar">
+      <a class="logo" href="/">
+        <svg class="logo-mark" viewBox="0 0 34 30" aria-hidden="true">
+          <path
+            class="cloud"
+            d="M9 14 A3.6 3.6 0 0 1 9.4 6.9 A5.8 5.8 0 0 1 20 4.6 A4.6 4.6 0 0 1 27.3 8.2 A3 3 0 0 1 27.2 14 Z"
+          />
+          <path class="drop" d="M18 16.5 C16 19.6, 15.6 21.6, 18 21.8 C20.4 21.6, 20 19.6, 18 16.5 Z" />
+          <path class="wave" d="M3 26.5 q3.5 -3 7 0 t7 0 t7 0 t7 0" />
+        </svg>
+        <span class="logo-word">Rain <span class="logo-to">to</span> Spill</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Main">
+        <a href="/">Overview</a>
+        <a href="/live.html" class="active" aria-current="page">Live map</a>
+        <a href="/triggers.html">What sets them off</a>
+        <a href="/tide.html">Where it goes</a>
+        <a href="/method.html">Method &amp; sources</a>
+      </nav>
+
+      <div class="topbar-right">
+        <span class="live-dot"></span>
+        <span id="last-updated">Live, updated --:--</span>
+      </div>
     </header>
 
     <!-- Everything below the team top bar: the map and its panels (positioned inside #stage) -->
@@ -63,6 +92,8 @@
           <li><i class="dot dis"></i>Spilling now</li>
           <li><i class="dot rec"></i>Spilled in last 48 h</li>
           <li><i class="dot fc"></i>Spill forecast</li>
+          <li><i class="dot quiet"></i>Not spilling</li>
+          <li><i class="dot off"></i>Monitor offline</li>
         </ul>
       </div>
       <div class="key-group">
@@ -70,7 +101,7 @@
         <ul class="key-list">
           <li><i class="dot sig"></i>Public sighting</li>
           <li><i class="dot fav"></i>Saved spot</li>
-          <li><i class="dot club"></i>River club</li>
+          <li id="keyClub" hidden><i class="dot club"></i>River club</li>
         </ul>
       </div>
     </details>
@@ -83,10 +114,10 @@
     <!-- ===================================== PANEL (side panel / phone bottom sheet) -->
     <button id="panelOpen" class="panel-open" aria-controls="panel" aria-label="Show panel" hidden>☰ <span>Your spot</span></button>
 
-    <aside id="panel" class="panel" data-snap="peek" aria-label="Thames Spill Map">
+    <aside id="panel" class="panel" data-snap="peek" aria-label="Live ThameSafe Spill Map">
       <div id="sheetHandle" class="sheet-handle" role="button" tabindex="0" aria-label="Show more"><span></span></div>
       <header class="panel-head">
-        <h1>Thames Spill Map</h1>
+        <h1>Live ThameSafe Spill Map</h1>
         <div class="head-btns">
           <button id="aboutBtn" class="ghost small-btn" aria-haspopup="dialog">About</button>
           <button id="panelClose" class="icon-btn panel-close" aria-label="Hide panel" title="Hide panel" aria-controls="panel">✕</button>
@@ -103,12 +134,13 @@
         <!-- ------------------------------------------------ STATUS -->
         <section id="tab-status" role="tabpanel" aria-labelledby="t-status">
           <div id="emptyState" class="empty">
+            <p class="slogan">Proactive, speedy and informative sewage risk assessments for Thames River users.</p>
             <p class="empty-title">Find your spot</p>
             <p class="small">Search above the map, press <b>◎</b>, or tap the river.</p>
           </div>
 
           <div id="statusCard" hidden>
-            <h3 id="nowH" class="sec-h">Right now <span class="sec-sub">· sewage risk</span></h3>
+            <h3 id="nowH" class="sec-h">Right now <span class="sec-sub">· Sewage risk</span></h3>
             <div class="status-top">
               <div class="light" aria-hidden="true"><span class="lamp high"></span><span class="lamp moderate"></span><span class="lamp low"></span></div>
               <div class="status-text">
@@ -132,7 +164,7 @@
                 <ul id="daySummary" class="day-sum"></ul>
               </details>
             </section>
-            <h3 id="weekH" class="sec-h">Next 7 days <span class="sec-sub">· worst each day</span></h3>
+            <h3 id="weekH" class="sec-h">Next 7 days <span class="sec-sub">· Highest risk each day</span></h3>
             <ol id="week" class="week" aria-labelledby="weekH"></ol>
             <label class="row small stretch">How far up and downstream
               <select id="radius">
@@ -163,7 +195,7 @@
               <summary class="small">Details and numbers</summary>
               <p id="hereText" class="small"></p>
               <div id="chart" role="img" aria-label="Impact over time with uncertainty band"></div>
-              <p class="small muted">Line: central estimate (SH/km). Band: 80% of model runs. Bars: chance of moderate or worse. <a href="live-method.html#traffic-light">How the status is decided</a></p>
+              <p class="small muted">Line: central estimate (SH/km). Band: 80% of model runs. Bars: chance of moderate or worse. <a href="method.html#traffic-light">How the status is decided</a></p>
             </details>
           </details>
 
@@ -239,9 +271,10 @@
     <!-- ===================================== DIALOGS -->
     <dialog id="about" aria-labelledby="aboutTitle">
       <form method="dialog"><button class="icon-btn dlg-close" aria-label="Close">✕</button></form>
-      <h2 id="aboutTitle">About Thames Spill Map</h2>
+      <h2 id="aboutTitle">About Live ThameSafe Spill Map</h2>
+      <p class="slogan">Proactive, speedy and informative sewage risk assessments for Thames River users.</p>
       <p>The traffic light shows how likely sewage from storm overflows is on your stretch of the Thames, now and for the next 7 days. It is a model estimate with stated uncertainty, not a water test. EDM monitors indicate, not confirm, spills. Check official bathing-water advice before entering the water.</p>
-      <p><a href="live-method.html">How it works — method, units and every setting</a></p>
+      <p><a href="method.html#live-map">How it works — method, units and every setting</a></p>
       <p id="aboutData" class="small"></p>
       <h3>Data and credits</h3>
       <ul class="small credits">

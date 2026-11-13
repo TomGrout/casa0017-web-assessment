@@ -15,6 +15,10 @@ async function startServer() {
     }
     console.log('Database connection pool established successfully.');
 
+    // Live map (river users): river_* tables + model run / WhatsApp updates (RIVER_ALERTS_ENABLED)
+    await ensureRiverTables();
+    initRiverAlertsCron();
+
     const httpServer = http.createServer(app);
     initSocket(httpServer);
 
@@ -23,10 +27,6 @@ async function startServer() {
     } else {
       console.log('[JOBS] Ingestion cron disabled (CRON_ENABLED=false)');
     }
-
-    // Live map (river users): river_* tables + model run / WhatsApp updates (RIVER_ALERTS_ENABLED)
-    await ensureRiverTables();
-    initRiverAlertsCron();
 
     httpServer.listen(config.port, () => {
       console.log('Server and WebSockets listening...')

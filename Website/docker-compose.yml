@@ -61,6 +61,7 @@ services:
       - "5173:5173"
     environment:
       VITE_API_URL: "http://localhost:3000"
+      VITE_USE_POLLING: "true" # see vite.config.js: pick up file edits made on the host
     volumes:
       - ./frontend:/app/frontend
       - /app/frontend/node_modules

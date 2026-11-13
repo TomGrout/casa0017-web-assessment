@@ -11,7 +11,7 @@ import { sendText, validSignature, extractMessages } from '../services/whatsapp.
 import { latest, snap, nearestPlace, stretchReport, stretchName, forecastLink, fmtTime } from '../services/riverModel.service.js';
 import { subscribers, sightings, claimMessage } from '../db/queries/river.queries.js';
 
-const HELP = 'Thames spill alerts: reply STATUS for your stretch, send a location pin to move your alert area, or STOP to unsubscribe.';
+const HELP = `${CONFIG.brand.name} alerts: reply STATUS for your stretch, send a location pin to move your alert area, or STOP to unsubscribe.`;
 
 async function statusText(s) {
   if (!latest.model) return 'The forecast is still loading — try STATUS again in a minute.';
@@ -26,7 +26,7 @@ async function statusText(s) {
     (r.source && r.now.risk !== 'low' ? `Mainly from ${r.source}.\n` : '') +
     `7 days: ${r.week}\n` +
     `${CONFIG.risk.certaintyLabel}: ${r.now.confidence.word}. Public sightings nearby (24 h): ${recent}.\n` +
-    `Full forecast: ${forecastLink(s)}\nHow it works: ${RIVER.publicMapUrl}/live-method.html`;
+    `Full forecast: ${forecastLink(s)}\nHow it works: ${RIVER.publicMapUrl}/method.html#live-map`;
 }
 
 export function verifyWebhook(req, res) {
@@ -47,7 +47,7 @@ export async function handleReply({ from, text, location }) {
   const word = text.toUpperCase();
   if (/^(STOP|UNSUBSCRIBE|CANCEL|END|QUIT)\b/.test(word)) {
     await subscribers.remove(from);
-    return sendText(from, 'Unsubscribed — your number and alert area have been deleted. Thanks for using the Thames spill map.');
+    return sendText(from, `Unsubscribed — your number and alert area have been deleted. Thanks for using the ${CONFIG.brand.name}.`);
   }
   if (!s) return sendText(from, `You're not signed up. Register your stretch of river at ${RIVER.publicMapUrl}`);
   if (/^(YES|START|CONFIRM|Y)\b/.test(word)) {

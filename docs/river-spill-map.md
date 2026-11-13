@@ -1,6 +1,6 @@
 # Live map — Thames sewage risk for river users (developer guide)
 
-The **Live map** page of Rain To Spill (`live.html`) is a live and 7-day **sewage risk** map for people on the River Thames (rowers, paddlers, swimmers, sailors). It answers one question in plain language — *is sewage likely on my stretch right now, over the next 24 hours and over the next 7 days?* — with a traffic light, a 24-hour strip (sewage risk, rain, tide), a 7-day row, citizen sighting reports, WhatsApp alerts for a chosen stretch, shareable/exportable outlooks and an embeddable status card for club websites. `live-method.html` explains every step with the live parameter values (linked from the map; the team's Method page is unchanged).
+The **Live map** page of Rain To Spill (`live.html`), named **Live ThameSafe Spill Map** (slogan: "Proactive, speedy and informative sewage risk assessments for Thames River users."; both set in `CONFIG.brand` and `live.html`), is a live and 7-day **sewage risk** map for people on the River Thames (rowers, paddlers, swimmers, sailors). It answers one question in plain language — *is sewage likely on my stretch right now, over the next 24 hours and over the next 7 days?* — with a traffic light, a 24-hour strip (sewage risk, rain, tide), a 7-day row, citizen sighting reports, WhatsApp alerts for a chosen stretch, shareable/exportable outlooks and an embeddable status card for club websites. `live-method.html` explains every step with the live parameter values (linked from the map; the team's Method page is unchanged).
 
 ## How it fits into Rain To Spill
 
@@ -17,7 +17,8 @@ Website/
 │   ├─ src/services/riverInputs.service.js   gathers model inputs, using existing services:
 │   │      thamesWater.service  fetchDischargeStatus()  (all watercourses, paged, read-only)
 │   │      tideForecast.service fetchTideForecast()     (EasyTide, London Bridge 0113)
-│   │      EA flood-monitoring flows · Open-Meteo rain · propensity from spill_event
+│   │      EA flood-monitoring flows · Open-Meteo rain · propensity from spill_event ·
+│   │      rainfall thresholds from analysis.service (getRainfallThresholds)
 │   ├─ src/services/riverModel.service.js    runs the shared model server-side
 │   ├─ src/services/riverAlerts.service.js   WhatsApp status-change updates
 │   ├─ src/services/whatsapp.service.js · recaptcha.service.js
@@ -26,28 +27,31 @@ Website/
 │   ├─ src/jobs/riverAlerts.js               cron (default every 15 min)
 │   └─ scripts/river/                        build-clubs.mjs, build-thames-centreline.mjs, clubs-extra.csv
 └─ frontend/ (existing Vite multi-page site)
-    ├─ live.html → src/pages/live.js → src/river/app.js   the map (MapLibre + deck.gl + ECharts), below a slim site header
-    ├─ live-method.html → src/pages/live-method.js → src/river/methodology.js
-    └─ src/river/ spots.js share.js site-nav.js style.css live-layout.css/js methodology.css
+    ├─ live.html → src/pages/live.js → src/river/app.js   the map (MapLibre + deck.gl + ECharts), below the team top bar
+    ├─ method.html (team page) section "How the Live map forecast works" → src/pages/method-live.js → src/river/methodology.js
+    ├─ live-method.html  redirects old links to method.html#live-map
+    └─ src/river/ spots.js share.js style.css live-layout.css method-live.css
 ```
 
 - The browser asks the backend **once** for everything (`GET /api/river/inputs`) and runs the 17-run ensemble model in a Web Worker, so the time slider is instant. The backend caches inputs for 10 minutes so many visitors share one set of upstream calls.
 - The backend runs the **same model module** on a schedule for WhatsApp alerts and `GET /api/river/status`.
 - Tide predictions now come from the team's existing **EasyTide** service, so no ADMIRALTY API key is needed.
+- Each overflow's **forecast spill chance** now comes from the team's own rainfall thresholds (`getRainfallThresholds()`, the analysis behind the "What sets them off" page) where the overflow has enough past spills; others keep the shared curve (assumptions A12–A12c).
 - Spill **propensity** (how often each overflow spills) now comes from the team's `spill_event` table (EDM history), instead of a separate CSV script.
-- Built on the latest `main` (Nov 11, `d8c2b77`, incl. Luca's backend data fixes). **No colleague's page, component, style or script is changed**: `index.html`, `triggers.html`, `tide.html`, `method.html`, their `src/pages/*.js`, `src/components/*`, `src/style.css` and `GroupProject/` are untouched. The live pages only *add* files; their header uses the team's `components/nav-bar.js` as-is and adds a "Live map" link in its own code (`src/river/site-nav.js`).
-- When Luca's pages (feature/triggers-data) are merged, the only follow-up is optional: point his top bar's "Live map" link at `/live.html`, and, if you like, swap the live pages' slim header for his top bar.
+- Built on top of Luca's pages (`feature/triggers-data`: Overview, What sets them off, Method & sources) and checked to merge into `main` (`d8c2b77`, Nov 11) with no conflicts. The live pages use his top bar (`src/topbar.css`, same markup as his pages, "Live map" highlighted) and fill in its "Live, updated HH:MM".
+- **The only change to colleagues' pages is one line in each of three files**: the top bar's "Live map" link in `index.html`, `method.html` and `triggers.html` now points to `/live.html` (it was a placeholder `/`, which reloaded the Overview). Nothing else in their pages, scripts, styles, components or `GroupProject/` is touched. Still a placeholder, left for Luca to decide: the Overview's "See what's spilling now →" link (`href="/"`).
 
 ### Changes to existing files (all small and backwards-compatible)
 
 | File | Change | Why |
 |---|---|---|
 | `backend/src/app.js` | mounts `/api/river`; `express.json` keeps `req.rawBody`; `trust proxy`; error handler honours `err.status` | routes; WhatsApp signature check; per-IP limits behind a proxy |
-| `backend/src/server.js` | creates river tables, starts the river alerts cron (independent of `CRON_ENABLED`; switch off with `RIVER_ALERTS_ENABLED=false`) | |
+| `backend/src/server.js` | after the database connects: creates river tables and starts the river alerts cron (independent of `CRON_ENABLED`; switch off with `RIVER_ALERTS_ENABLED=false`). Placed away from the `CRON_ENABLED` block so it merges with `main` cleanly | |
 | `backend/src/services/thamesWater.service.js` | `fetchDischargeStatus({ cache: false })` skips writing to `outfalls` | the river map reads every watercourse and must not add non-London outfalls to the team's table |
 | `backend/src/services/tideForecast.service.js` | `EASYTIDE_BASE_URL` env override | testing |
 | `backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml`, `.dockerignore` | build context = `Website/`; `shared/` copied/mounted at `/app/shared` | both images need the shared model |
 | `frontend/vite.config.js` | adds `live` and `liveMethod` pages; dev port 5173 (3000 is the backend), `fs.allow` Website/, ES worker, es2022 | new pages, shared folder, Web Worker, top-level await |
+| `frontend/index.html`, `method.html`, `triggers.html` | one line each: top-bar "Live map" link → `/live.html` (was `/`) | the link reloaded the Overview instead of opening the map |
 | `frontend/package.json` | maplibre-gl, @deck.gl/*, d3, echarts | map and charts |
 
 ## Run it
@@ -68,7 +72,7 @@ Optional: `cd backend && npm run river:clubs` builds `frontend/public/clubs.json
 
 | Method & path | What it returns |
 |---|---|
-| `GET /api/river/inputs` | `{ now, overflows[], gauges[], highWaters{source,quality,times[],events[]}, rain{dp,byKey}, propensity{permit: 0..1}, problems[] }` — the model's inputs. Cached `RIVER_INPUTS_CACHE_MINUTES`. 503 if Thames Water is unreachable and nothing is cached. |
+| `GET /api/river/inputs` | `{ now, overflows[], gauges[], highWaters{source,quality,times[],events[]}, rain{dp,byKey}, propensity{permit: 0..1}, thresholds{permit or name: {min, avg, n}}, problems[] }` — the model's inputs. Cached `RIVER_INPUTS_CACHE_MINUTES`. 503 if Thames Water is unreachable and nothing is cached. |
 | `GET /api/river/status?lon=&lat=&r=3` | `{ place, now{risk,label,advice,certainty}, next{risk,rising,at}, days[{day,date,risk}] }` for a stretch (server-side model). Handy for other pages, e.g. a "river now" badge. |
 | `GET /api/river/sightings?days=7` | GeoJSON of public sighting reports (unverified). |
 | `POST /api/river/sightings` | `{ lon, lat, types[], severity 1-3, note?, observedAt?, captcha }` → 201. reCAPTCHA v3 verified when `RECAPTCHA_SECRET` is set. |
@@ -217,7 +221,7 @@ Framing headers are a hosting decision: send `Content-Security-Policy: frame-anc
 
 ```
 EDM status ──► emission per 15-min step (weight = spill-hours)
-rain fcst ───► P(spill) per forecast hour × propensity ──► forecast emission
+rain fcst ───► P(spill) per forecast hour (team rainfall threshold per overflow, else shared curve) × propensity ──► forecast emission
                      │
            tributary delay = off-river distance × sinuosity ÷ v_trib
                      ▼
@@ -249,11 +253,13 @@ Thresholds in `CONFIG.impact.thresholds` decide the colours; the full derivation
 | A9 | Tide phase from London Bridge high waters (ADMIRALTY predictions via the team's EasyTide service), else EA observed tidal level, else config | `tide.easyTideStationId` (0113), `tide.eaTidalSearch`, `tide.fallbackHighWaterUtc` | Use a station nearer your users (EasyTide ids in `THAMES_STATIONS`) |
 | A10 | 90% die-off in 30 h | `decay.t90Hours` | Shorter in summer sun, longer in cold turbid winter water |
 | A11 | Longitudinal dispersion 0.6 km²/h | `decay.dispersionKm2PerHour`, `decay.minSigmaKm` | Larger values = broader, flatter plumes |
-| A12 | Spill chance = logistic in 6-h rain: 50% at 8 mm, none under 2 mm | `forecast.accumHours`, `r50mm`, `slopeMm`, `minRainMm`, `minProbability`, `siteBase`, `recentBoost` | Fit per site from EA detailed returns vs historical rain; **groundwater-impacted sites spill in dry weather**, so lower `minRainMm` for them |
+| A12 | **Overflows with a team rainfall threshold:** spill chance = logistic in **24-h** forecast rain, starting (10% of the site's maximum) at the overflow's **lowest** past trigger rain and reaching half the maximum at its **average** past trigger rain. Both values come from the team's analysis (`getRainfallThresholds()` in `analysis.service.js`, the data behind `/api/analysis/rainfall-thresholds` and the "What sets them off" page) | `forecast.thresholds.enabled`, `windowHours`, `minSpills`, `onsetShare`, `minSlopeMm`, `maxSlopeMm`; `loadThresholds()` in `backend/src/services/riverInputs.service.js`; `RIVER_THRESHOLDS_MAX` | The average-before-spills is a judgement for the 50% point: the record holds only spill days, not wet days without a spill. Fit a true rain→spill rate once non-spill days are analysed. Raise `minSpills` to rely only on well-observed overflows. One unusual (dry-weather) spill sets the lowest value: a low percentile would be more robust |
+| A12b | **Other overflows** (fewer than `minSpills` past spills with rain data, or none): shared curve, logistic in 6-h rain: 50% at 8 mm. None under 2 mm for any overflow | `forecast.accumHours`, `r50mm`, `slopeMm`, `minRainMm`, `minProbability`, `siteBase`, `recentBoost` | **Groundwater-impacted sites spill in dry weather**, so lower `minRainMm` for them |
+| A12c | Past trigger rain is measured at the nearest rain gauge (`rain_24h_mm`, team enrichment); forecast rain is an Open-Meteo grid value at the overflow | — | Compare gauge and grid totals for past events and scale if they differ |
 | A13 | Spill propensity = percentile rank of each overflow's total spill hours over the last 365 days in `spill_event`, joined by **permit number** | `RIVER_PROPENSITY_DAYS`, `loadPropensity()` in `backend/src/services/riverInputs.service.js`, `forecast.siteBase` | Weight recent years more; use rain-conditional spill rates from the team's analysis endpoints |
 | A14 | OSGB36→WGS84 via 7-parameter Helmert (~5 m) | `proj4.defs('EPSG:27700', …)` in `sources.js` | Load the OSTN15 NTv2 grid for sub-metre accuracy |
 
-**Traffic light (`CONFIG.risk`, `shared/river/model/risk.js`)** — explained for users in methodology §2
+**Traffic light (`CONFIG.risk`, `shared/river/model/risk.js`)** — explained for users in method.html#traffic-light
 
 | # | Assumption | Parameter(s) | Why you might change it |
 |---|---|---|---|
@@ -276,7 +282,7 @@ Thresholds in `CONFIG.impact.thresholds` decide the colours; the full derivation
 
 **WhatsApp status updates (`SETTINGS.alerts`)**: `downgradeHoldMinutes` (60, no flip-flopping), `minGapMinutes` (60, except rises to red), `warnAheadHours` (12, early-warning window), `quietHours` (22–07, only rises to red). Modes: `low` = every change + early warnings, `moderate` = every change, `high` = red only.
 
-**Uncertainty ensemble (`CONFIG.uncertainty`)** — full explanation in methodology §5
+**Uncertainty ensemble (`CONFIG.uncertainty`)** — full explanation in method.html#uncertainty
 
 | # | Assumption | Parameter(s) | Why you might change it |
 |---|---|---|---|
@@ -341,57 +347,53 @@ Other knobs: `sim.pastHours` / `sim.horizonHours` (168 h = 7 days) / `sim.stepMi
 
 ---
 
-## Sources
+## References
 
-Data
-- ADMIRALTY EasyTide (tide predictions used through the team's tideForecast.service) — https://easytide.admiralty.co.uk
-- Thames Water storm discharge data and third-party API — https://www.thameswater.co.uk/about-us/performance/river-health/storm-discharge-and-flow-data
-- Thames Water v2 status endpoint — https://api.thameswater.co.uk/opendata/v2/discharge/status (via https://thames.me.uk/s00331sewage.php)
-- Field names (v1 schema: `LocationName`, `PermitNumber`, `X`, `Y`, `AlertStatus`, …) — https://github.com/mossc001/Thames_Water_API_to_Home_Assistant
-- EA Event Duration Monitoring – Storm Overflow – Start/Stop Detailed Data — https://www.data.gov.uk/dataset/event-duration-monitoring-storm-overflow-start-stop-detailed-data
-- EA real-time flood-monitoring API reference — https://environment.data.gov.uk/flood-monitoring/doc/reference
-- Open-Meteo forecast API & multi-location requests — https://open-meteo.com/en/docs , https://openmeteo.substack.com/p/weather-data-for-multiple-locations
-- UKHO ADMIRALTY UK Tidal API (Discovery) — https://api.gov.uk/ukho/uk-tidal-api-discovery/ , https://www.admiralty.co.uk/access-data/apis ; endpoint shape from https://rdrr.io/github/simon-tarr/uk.tides/src/R/get_tides.R
-- EPSG:27700 Helmert parameters — https://epsg.io/27700-1314 , https://github.com/OrdnanceSurvey/os-transform
+Harvard style, in alphabetical order. "No date" means the web page shows no publication date. The note after each reference says what it was used for.
 
-Libraries
-- deck.gl `@deck.gl/maplibre` MapLibreOverlay (Vite worker setup, `beforeId`, antialiasing) — https://deck.gl/docs/api-reference/maplibre/overview
-- MapLibre GeolocateControl — https://maplibre.org/maplibre-gl-js/docs/API/classes/GeolocateControl/
-- MDN Geolocation (secure context) — https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API
+- American Meteorological Society (no date) 'Rain', *Glossary of Meteorology*. Available at: https://glossary.ametsoc.org/wiki/Rain (Accessed: 13 November 2026). — Light / moderate / heavy rain rates.
+- Apache Software Foundation (no date) *Apache ECharts*. Available at: https://echarts.apache.org/ (Accessed: 13 November 2026). — Charts in the panel.
+- Deutsche Telekom (no date) *WhatsApp: messages API concepts*. Available at: https://docs.developer.telekom.com/en/messages/concepts/whatsapp (Accessed: 13 November 2026). — WhatsApp templates, 24-hour window, opt-in.
+- Dick, L.K., Stelzer, E.A., Bertke, E.E., Fong, D.L. and Stoeckel, D.M. (2010) 'Relative decay of *Bacteroidales* microbial source tracking markers and cultivated *Escherichia coli* in freshwater microcosms', *Applied and Environmental Microbiology*, 76(10), pp. 3255–3262. doi: 10.1128/AEM.02636-09. Available at: https://pmc.ncbi.nlm.nih.gov/articles/PMC2869114 (Accessed: 13 November 2026). — E. coli die-off time (T90).
+- Environment Agency (no date a) *Environment Agency real time flood-monitoring API: reference*. Available at: https://environment.data.gov.uk/flood-monitoring/doc/reference (Accessed: 13 November 2026). — River flow gauges and tidal levels.
+- Environment Agency (no date b) *Event Duration Monitoring – storm overflows – start/stop detailed data*. Available at: https://www.data.gov.uk/dataset/event-duration-monitoring-storm-overflow-start-stop-detailed-data (Accessed: 13 November 2026). — Spill history.
+- EPSG.io (no date) *EPSG:27700 OSGB36 / British National Grid: transformation 1314*. Available at: https://epsg.io/27700-1314 (Accessed: 13 November 2026). — National Grid to latitude/longitude parameters.
+- Google (no date a) *reCAPTCHA v3*. Available at: https://developers.google.com/recaptcha/docs/v3 (Accessed: 13 November 2026). — Spam check on reports and sign-ups.
+- Google (no date b) *Verifying the user's response*. Available at: https://developers.google.com/recaptcha/docs/verify (Accessed: 13 November 2026). — Server-side reCAPTCHA check.
+- Google Cloud (no date) *reCAPTCHA migration overview*. Available at: https://docs.cloud.google.com/recaptcha/docs/migration-overview (Accessed: 13 November 2026). — reCAPTCHA keys in Google Cloud.
+- GOV.UK (no date) *Report water pollution*. Available at: https://www.gov.uk/report-water-pollution (Accessed: 13 November 2026). — Environment Agency incident hotline.
+- Komoot (no date) *Photon: open source geocoder for OpenStreetMap data*. Available at: https://github.com/komoot/photon (Accessed: 13 November 2026). — Place and club search.
+- MapLibre (no date) *MapLibre GL JS documentation*. Available at: https://maplibre.org/maplibre-gl-js/docs/ (Accessed: 13 November 2026). — The map and its locate control.
+- Meta (no date) *WhatsApp Cloud API reference: messages*. Available at: https://developers.secure.facebook.com/docs/whatsapp/cloud-api/reference/messages (Accessed: 13 November 2026). — Sending WhatsApp messages.
+- mossc001 (no date) *Thames_Water_API_to_Home_Assistant*. Available at: https://github.com/mossc001/Thames_Water_API_to_Home_Assistant (Accessed: 13 November 2026). — Thames Water field names (v1 schema).
+- Mozilla (no date a) *Content-Security-Policy: frame-ancestors directive*. Available at: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors (Accessed: 13 November 2026). — Which sites may embed the map.
+- Mozilla (no date b) *Geolocation API*. Available at: https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API (Accessed: 13 November 2026). — Locate-me needs a secure (https) page.
+- Ominiflow (no date) *WhatsApp API: send message*. Available at: https://ominiflow.com/blog/whatsapp-api-send-message (Accessed: 13 November 2026). — Cloud API template request shape.
+- OpenFreeMap (no date) *OpenFreeMap*. Available at: https://openfreemap.org/ (Accessed: 13 November 2026). — Background map tiles.
+- OpenJS Foundation (no date) *deck.gl: @deck.gl/maplibre overview*. Available at: https://deck.gl/docs/api-reference/maplibre/overview (Accessed: 13 November 2026). — Drawing the river and overflow layers on the map.
+- Open-Meteo (no date a) *Weather forecast API documentation*. Available at: https://open-meteo.com/en/docs (Accessed: 13 November 2026). — Hourly rain forecast (up to 16 days).
+- Open-Meteo (no date b) *Weather data for multiple locations*. Available at: https://openmeteo.substack.com/p/weather-data-for-multiple-locations (Accessed: 13 November 2026). — Many locations in one request.
+- OpenStreetMap contributors (no date) *Copyright and licence*. Available at: https://www.openstreetmap.org/copyright (Accessed: 13 November 2026). — River club locations and base map data (ODbL).
+- OpenStreetMap Foundation (no date) *Attribution guidelines*. Available at: https://osmfoundation.org/wiki/Attribution (Accessed: 13 November 2026). — How to credit OpenStreetMap.
+- OpenStreetMap Wiki (no date) *Overpass API: language guide*. Available at: https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide (Accessed: 13 November 2026). — Query used to build the club list.
+- Ordnance Survey (no date a) *OS Open Rivers: overview*. Available at: https://docs.os.uk/os-downloads/networks/os-open-rivers/os-open-rivers-overview (Accessed: 13 November 2026). — River centreline.
+- Ordnance Survey (no date b) *OS Open Rivers: technical specification*. Available at: https://docs.os.uk/os-downloads/networks/os-open-rivers/os-open-rivers-technical-specification (Accessed: 13 November 2026). — River network attributes.
+- Ordnance Survey (no date c) *OS Open Rivers*. Available at: https://www.data.gov.uk/dataset/dc29160b-b163-4c6e-8817-f313229bcc23/os-open-rivers1 (Accessed: 13 November 2026). — Attribution statement and update cycle.
+- Ordnance Survey (no date d) *os-transform*. Available at: https://github.com/OrdnanceSurvey/os-transform (Accessed: 13 November 2026). — National Grid conversion.
+- Port of London Authority (no date a) *Tide tables: average time differences*. Available at: https://www.pla.co.uk/Safety/Tide-Tables-Average-Time-Differences (Accessed: 13 November 2026). — Tide time shifts from London Bridge.
+- Port of London Authority (no date b) *Active Thames*. Available at: https://pla.co.uk/active-thames-aw (Accessed: 13 November 2026). — Context on river-activity groups.
+- Postcodes.io (no date) *API overview*. Available at: https://api.postcodes.io/docs/overview (Accessed: 13 November 2026). — Postcode and place search.
+- Tarr, S. (no date) *uk.tides: get_tides.R*. Available at: https://rdrr.io/github/simon-tarr/uk.tides/src/R/get_tides.R (Accessed: 13 November 2026). — Shape of the ADMIRALTY tidal API response.
+- Thames Water (no date) *Storm discharge and flow data*. Available at: https://www.thameswater.co.uk/about-us/performance/river-health/storm-discharge-and-flow-data (Accessed: 13 November 2026). — Live overflow status (EDM).
+- thames.me.uk (no date) *Thames sewage discharges*. Available at: https://thames.me.uk/s00331sewage.php (Accessed: 13 November 2026). — Thames Water v2 status endpoint.
+- *The Bathing Water Regulations 2013* (SI 2013/1675), Schedule 5. Available at: https://legislation.gov.uk/uksi/2013/1675/schedule/5/2016-06-20 (Accessed: 13 November 2026). — Inland bathing water standards.
+- Tideway (no date) *Active Thames*. Available at: https://tideway.london/impact/active-thames/ (Accessed: 13 November 2026). — Context on river-activity groups.
+- UK Hydrographic Office (no date a) *ADMIRALTY EasyTide*. Available at: https://easytide.admiralty.co.uk (Accessed: 13 November 2026). — Tide predictions at London Bridge.
+- UK Hydrographic Office (no date b) *UK Tidal API: Discovery*. Available at: https://api.gov.uk/ukho/uk-tidal-api-discovery/ (Accessed: 13 November 2026). — Alternative tide source.
+- Wapgrowai (no date) *Handling WhatsApp Cloud API webhooks in Node.js: signatures, retries and duplicate events*. Available at: https://dev.to/wapgrowai_org/handling-whatsapp-cloud-api-webhooks-in-nodejs-signatures-retries-and-duplicate-events-4dci (Accessed: 13 November 2026). — Webhook signature check and de-duplication.
+- Wikipedia (no date) *Tideway*. Available at: https://en.wikipedia.org/wiki/Tideway (Accessed: 13 November 2026). — Background on the tidal Thames.
+- Zoho (2025) *WhatsApp pricing changes: pay per message starting July 1, 2025*. Available at: https://help.zoho.com/portal/en/community/topic/whatsapp-pricing-changes-pay-per-message-starting-july-1-2025 (Accessed: 13 November 2026). — WhatsApp message pricing.
 
-River network
-- OS Open Rivers overview (topologically structured link-and-node network, flow direction, 1:25 000 nominal scale) — https://docs.os.uk/os-downloads/networks/os-open-rivers/os-open-rivers-overview
-- OS Open Rivers on data.gov.uk (attribution statement, twice-yearly updates) — https://www.data.gov.uk/dataset/dc29160b-b163-4c6e-8817-f313229bcc23/os-open-rivers1
-- OS Open Rivers technical specification — https://docs.os.uk/os-downloads/networks/os-open-rivers/os-open-rivers-technical-specification
-
-Uncertainty, units and reporting
-- E. coli die-off in river water (t99 ≈ 2–3 days at 15–25 °C, so T90 ≈ 24–36 h) — Dick et al. 2010, https://pmc.ncbi.nlm.nih.gov/articles/PMC2869114
-- Inland bathing water standards (E. coli 500 / 1,000 / 900 cfu/100 ml) — Bathing Water Regulations 2013, Schedule 5, https://legislation.gov.uk/uksi/2013/1675/schedule/5/2016-06-20
-- Open-Meteo forecast_days up to 16 — https://open-meteo.com/en/docs
-- Reporting water pollution / EA 24-hour hotline 0800 80 70 60 — https://www.gov.uk/report-water-pollution
-- reCAPTCHA v3 (execute with action, score 0.0–1.0, default threshold 0.5, tokens expire after 2 min) — https://developers.google.com/recaptcha/docs/v3 ; server verification — https://developers.google.com/recaptcha/docs/verify ; keys now in Google Cloud, siteverify unchanged, 10,000 free assessments/month, fails open over quota — https://docs.cloud.google.com/recaptcha/docs/migration-overview
-- postcodes.io (no authentication) — https://api.postcodes.io/docs/overview
-
-WhatsApp / server
-- Cloud API template send request (endpoint, body) — https://ominiflow.com/blog/whatsapp-api-send-message
-- Webhook verification, `X-Hub-Signature-256`, raw-body HMAC, de-duplication on `wamid`, HTTPS requirement — https://dev.to/wapgrowai_org/handling-whatsapp-cloud-api-webhooks-in-nodejs-signatures-retries-and-duplicate-events-4dci
-- Templates, 24-hour window, opt-in, business approval — https://docs.developer.telekom.com/en/messages/concepts/whatsapp
-- Per-message pricing from 1 July 2025; free utility templates inside the service window — https://help.zoho.com/portal/en/community/topic/whatsapp-pricing-changes-pay-per-message-starting-july-1-2025
-- Meta Cloud API messages reference — https://developers.secure.facebook.com/docs/whatsapp/cloud-api/reference/messages
-
-Next 24 hours
-- PLA tide tables — average time differences on London Bridge (Tower Pier) — https://www.pla.co.uk/Safety/Tide-Tables-Average-Time-Differences (read via https://server1.pla.co.uk/Safety/Tide-Tables-Average-Time-Differences)
-- AMS Glossary of Meteorology, "Rain" (light ≤ 0.25 cm/h, moderate 0.26–0.76 cm/h, heavy > 0.76 cm/h) — https://glossary.ametsoc.org/wiki/Rain
-
-Clubs, layout and embedding
-- postcodes.io place search (OS Open Names): https://api.postcodes.io/docs/place/query
-- Photon geocoder (komoot; OSM data; search-as-you-type; fair-use public server): https://github.com/komoot/photon and API parameters https://github.com/komoot/photon/blob/master/docs/api-v1.md
-- Active Thames (Tideway-funded programme run with the PLA; grants to river-activity groups, not a club directory) — https://tideway.london/impact/active-thames/ ; https://pla.co.uk/active-thames-awards-funding-26-organisations
-- OpenStreetMap copyright and licence (ODbL; credit "© OpenStreetMap contributors") — https://www.openstreetmap.org/copyright ; OSMF attribution guidelines — https://osmfoundation.org/wiki/Attribution
-- Overpass API language guide (`around` filter, regex on tags, `out center`) — https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide ; syntax reference (`around` with a list of points forms a line) — https://osm-queries.ldodds.com/syntax-reference.html
-- CSP `frame-ancestors` (which sites may embed a page; supersedes X-Frame-Options) — https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors
-
-Context
-- Tidal Thames / Tideway — https://en.wikipedia.org/wiki/Tideway ; Thames Tideway Tunnel — https://www.tideway.london/
+Also used: the team's own analysis code in this repository (`Website/backend/src/services/analysis.service.js`, `threshold.service.js`, `thamesWater.service.js`, `tideForecast.service.js`).
 
 Attribution strings required by the data providers are in the panel footer (`frontend/live.html`).

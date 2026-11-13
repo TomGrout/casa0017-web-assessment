@@ -1,12 +1,12 @@
-// Thames Spill Map — entry point.
+// Live ThameSafe Spill Map — entry point.
 // Priority: a plain traffic-light status for the user's spot / stretch.
 // Layout: find-your-spot controls on the map (search with predictive club/place/postcode
 // suggestions, locate me, saved spots); a tabbed panel (Status / Report / Alerts) that is
 // a side panel on wide screens and a three-position bottom sheet on phones.
 // Embed mode (?embed=card|map) gives club websites a compact live status card.
-// Part of Rain To Spill: the Live map page (live.html → src/pages/live.js), below the site header.
+// Part of Rain To Spill: the Live map page (live.html → src/pages/live.js), below the team top bar.
 // Data: the backend's GET /api/river/inputs (Website/backend/src/services/riverInputs.service.js).
-// Model + tunables: Website/shared/river (shared with the backend's WhatsApp alerts). Method: live-method.html.
+// Model + tunables: Website/shared/river (shared with the backend's WhatsApp alerts). Method: method.html#live-map.
 
 import { Map as MLMap, setWorkerUrl, NavigationControl, GeolocateControl, ScaleControl } from 'maplibre-gl';
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
@@ -170,12 +170,13 @@ async function refresh() {
   $('status').classList.add('busy');
   try {
     // One request to the Rain To Spill backend: overflows (Thames Water), EA flows, rain
-    // forecast (Open-Meteo), tides (EasyTide) and spill propensity (spill_event history).
+    // forecast (Open-Meteo), tides (EasyTide), spill propensity (spill_event history) and the
+    // team's per-overflow rainfall thresholds (analysis.service), which set each spill chance.
     $('status').textContent = 'Fetching live data…';
     const inp = await fetchJson(CONFIG.api.base + CONFIG.api.inputs, { timeoutMs: CONFIG.api.inputsTimeoutMs });
     const now = Date.now(); // model frames follow this browser's clock; data age = inp.now
     $('status').textContent = `Updating forecast (${CONFIG.uncertainty.members + 1} model runs)…`;
-    const snap = await runInWorker({ now, overflows: inp.overflows, gauges: inp.gauges, highWaters: inp.highWaters, rain: inp.rain, propensity: inp.propensity });
+    const snap = await runInWorker({ now, overflows: inp.overflows, gauges: inp.gauges, highWaters: inp.highWaters, rain: inp.rain, propensity: inp.propensity, thresholds: inp.thresholds });
     Object.assign(state, { model: new ModelView(snap), overflows: inp.overflows, rain: inp.rain, tide: inp.highWaters, dataAt: inp.now,
       tideSource: inp.highWaters.source, problems: inp.problems ?? [], gaugeCount: inp.gauges.length, spotKey: '' });
     const m = state.model;
@@ -198,7 +199,7 @@ async function refresh() {
 function updateStatus() {
   const m = state.model;
   if (!m) return;
-  // site header: "Live, updated HH:MM"
+  // team top bar: "Live, updated HH:MM"
   const lu = document.getElementById('last-updated');
   if (lu) lu.textContent = `Live, updated ${new Date(state.dataAt).toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' })}`;
   const o = state.overflows, n = (s) => o.filter((x) => x.status === s).length;
@@ -252,6 +253,13 @@ function segmentValues() {
   return out;
 }
 
+/** One line saying which rain rule sets an overflow's forecast spill chance (see CONFIG.forecast.thresholds). */
+function triggerText(g) {
+  if (g?.source === 'team') {
+    return `Rain trigger from ${g.spills} past spills: from ${fmt2(g.minMm)} mm, typically ${fmt2(g.avgMm)} mm in ${g.windowH} h`;
+  }
+  return `Rain trigger: general rule (${CONFIG.forecast.r50mm} mm in ${CONFIG.forecast.accumHours} h); too few past spills with rain records`;
+}
 const CLUB_MIN_ZOOM = 11; // [PARAM] clubs appear on the map from this zoom (search finds them at any zoom)
 function render() {
   const m = state.model;
@@ -264,12 +272,12 @@ function render() {
   const widthOf = mode === 'risk' ? (r) => (r === 'high' ? 9 : r === 'moderate' ? 7 : 4)
     : mode === 'central' || mode === 'p90' ? (v) => 4 + Math.min(8, v * 8) : (p) => 4 + p * 8;
   const siteColour = (s) => {
-    if (s.status === 'offline') return [138, 148, 155, 200];
+    if (s.status === 'offline') return [201, 208, 213, 235]; // pale with a dark ring (see getLineColor); key: "Monitor offline"
     if (s.status === 'discharging' && t <= m.now + H) return [192, 38, 45, 255];
     if (s.past48h && t <= m.now + 6 * H) return [230, 138, 0, 230];
     const p = (s.forecast ?? []).find((x) => Math.abs(x.t - t) < 0.6 * H)?.p ?? 0;
     if (t > m.now && p >= 0.15) return [123, 79, 214, 80 + p * 175];
-    return [90, 110, 120, 140];
+    return [90, 110, 120, 140]; // key: "Not spilling"
   };
   const visibleSites = $('showQuiet').checked ? m.sites : m.sites.filter((s) => s.status !== 'not_discharging' || s.past48h || s.pSpill7d > 0.1);
   const sightingsNow = $('showSightings').checked
@@ -290,8 +298,9 @@ function render() {
         getFillColor: [255, 255, 255, 230], getLineColor: [60, 80, 90, 220], stroked: true, lineWidthMinPixels: 1.5,
         getRadius: 4, radiusUnits: 'pixels', pickable: true }),
       new ScatterplotLayer({ id: 'overflows', data: visibleSites, getPosition: (d) => d.position, getFillColor: siteColour,
-        getRadius: (d) => (d.status === 'discharging' ? 7 : 4.5), radiusUnits: 'pixels', stroked: true, getLineColor: [255, 255, 255, 220],
-        lineWidthMinPixels: 1, pickable: true, updateTriggers: { getFillColor: [state.f, m.now] } }),
+        getRadius: (d) => (d.status === 'discharging' ? 7 : 4.5), radiusUnits: 'pixels', stroked: true,
+        getLineColor: (d) => (d.status === 'offline' ? [90, 110, 120, 255] : [255, 255, 255, 220]),
+        lineWidthMinPixels: 1.5, pickable: true, updateTriggers: { getFillColor: [state.f, m.now] } }),
       new ScatterplotLayer({ id: 'sightings', data: sightingsNow, getPosition: (d) => d.position,
         getFillColor: (d) => [122, 75, 30, 255 - Math.min(180, ((Date.now() - d.observedAt) / H) * 1.2)],
         getRadius: (d) => 5 + d.severity * 2, radiusUnits: 'pixels', stroked: true, getLineColor: [255, 214, 102], lineWidthMinPixels: 2, pickable: true }),
@@ -321,7 +330,8 @@ function describe(o, layerId) {
   if (layerId === 'overflows') {
     return `<b>${esc(o.name)}</b><br>Storm overflow · ${esc(o.receivingWater || '—')} (permit ${esc(o.id)})<br>Status: <b>${o.status.replace('_', ' ')}</b><br>` +
       (o.start ? `Last start: ${fmtTime(o.start)}<br>` : '') + (o.stop ? `Last stop: ${fmtTime(o.stop)}<br>` : '') +
-      `Chance of a new spill: <b>${pct(o.pSpill24h)}</b> in 24 h · <b>${pct(o.pSpill7d)}</b> in 7 days`;
+      `Chance of a new spill: <b>${pct(o.pSpill24h)}</b> in 24 h · <b>${pct(o.pSpill7d)}</b> in 7 days<br>` +
+      `<span style="opacity:.75">${triggerText(o.trigger)}</span>`;
   }
   if (layerId === 'sightings') {
     return `<b>Public sighting</b> · ${CONFIG.sightings.severities[o.severity - 1]}<br>${o.types.map(esc).join(', ')}<br>` +
@@ -367,7 +377,10 @@ function setSpot(position, source, opts = {}) {
     notice(`That spot is ${sn.offKm.toFixed(1)} km from the Thames — choose somewhere within ${max} km of the river.`);
     return false;
   }
+  // Stretch length: a saved spot or link brings its own; otherwise the user's own choice if they
+  // have made one; otherwise the default for how the spot was chosen (CONFIG.spots).
   if (opts.radius) $('radius').value = String(opts.radius);
+  else if (!state.radiusChosen) $('radius').value = String(source === 'click' ? CONFIG.spots.clickRadiusKm : CONFIG.spots.defaultRadiusKm);
   const place = nearestPlace(position);
   state.spot = { position, source, chainage: sn.chainage, offKm: sn.offKm, place, name: opts.name ?? null };
   state.spotKey = '';
@@ -380,7 +393,7 @@ function setSpot(position, source, opts = {}) {
   render();
   renderSpot();
   if (opts.snappedFromKm) notice(`Showing the stretch of the Thames nearest ${opts.name ?? 'that place'} (${opts.snappedFromKm.toFixed(1)} km away).`);
-  if (opts.fly) map.flyTo({ center: position, zoom: Math.max(map.getZoom(), 12.5) });
+  if (opts.fly) map.flyTo({ center: position, zoom: Math.max(map.getZoom(), source === 'click' ? CONFIG.spots.clickZoom : CONFIG.spots.flyZoom) });
   if (PHONE.matches && $('panel').dataset.snap === 'peek' && source !== 'link' && source !== 'favourite-auto') snapSheet('half');
   return true;
 }
@@ -414,7 +427,7 @@ function renderSpot() {
     $('statusLabel').innerHTML = `<span class="risk-icon" aria-hidden="true">${info.icon}</span> ${info.label}`;
   }
   $('statusSure').textContent = `${CONFIG.risk.certaintyLabel}: ${now.confidence.word}`;
-  $('riskMeaning').innerHTML = `${esc(CONFIG.risk.meaning)} <a href="live-method.html#traffic-light" target="_blank" rel="noopener">How it's worked out</a>`;
+  $('riskMeaning').innerHTML = `${esc(CONFIG.risk.meaning)} <a href="method.html#traffic-light" target="_blank" rel="noopener">How it's worked out</a>`;
   $('advice').textContent = info.advice;
 
   // map status card (desktop): the answer stays visible while you pan the map
@@ -429,10 +442,13 @@ function renderSpot() {
     ? `Worst point: about ${Math.round(Math.abs(offsetKm))} km ${offsetKm > 0 ? 'downstream' : 'upstream'} of your spot.`
     : '';
   const nx = nextChange(hours, Date.now(), 48);
-  $('nextLine').textContent = nx
+  // The panel only speaks up when the light is about to change (the 24-hour strip and 7-day
+  // chips already show "no change"). The share image and embed card have no strip, so they
+  // keep the full sentence (state.nextLine).
+  $('nextLine').textContent = nx ? `${nx.rising ? '▲' : '▼'} ${riskInfo(nx.to).short} from about ${fmtTime(nx.t)}` : '';
+  state.nextLine = nx
     ? `${nx.rising ? '▲ Rising' : '▼ Easing'} to ${riskInfo(nx.to).label.toLowerCase()} around ${fmtTime(nx.t)}.`
     : `No change expected in the next 48 hours.`;
-  state.nextLine = $('nextLine').textContent;
 
   const days = stretchDays(hours, Date.now());
   state.spotDays = days;
@@ -491,14 +507,15 @@ function stripHtml(day) {
   }
   // no data: the row shows one line of text instead of the chart (keeps rows from overlapping)
   const noRain = day.hours[0].rain === null, noTide = !td.tidal || td.unknown;
+  const allDry = !noRain && day.hours.every((h) => h.rainClass === 'dry'); // an empty row would look broken
   const tickH = CONFIG.context.tickHours;
   const ticks = day.hours.filter((_, i) => i % tickH === 0)
     .map((h, k) => `<span style="left:${x(h.t)}%">${k === 0 ? 'Now' : hh(toHour(h.t)).slice(0, 2)}</span>`).join('');
   return `<div class="srow"><span class="lab">Sewage</span><div class="cells">${risk}</div></div>
-    <div class="srow"><span class="lab">Rain</span><div class="cells rain${noRain ? ' nodata' : ''}">${rain}</div></div>
+    <div class="srow"><span class="lab">Rain</span><div class="cells rain${noRain || allDry ? ' nodata' : ''}">${allDry ? '<span class="na">No rain expected</span>' : rain}</div></div>
     <div class="srow"><span class="lab">Tide</span><div class="tide${noTide ? ' nodata' : ''}">${tide}</div></div>
     <div class="srow axis"><span class="lab"></span><div class="ticks" aria-hidden="true">${ticks}</div></div>
-    ${noRain && noTide ? '' : `<p class="strip-key" aria-hidden="true">${noRain ? '' : 'Rain <i class="rk light"></i>light <i class="rk moderate"></i>moderate <i class="rk heavy"></i>heavy'}${noRain || noTide ? '' : ' · '}${noTide ? '' : 'Tide ▲ high ▼ low'}</p>`}`;
+    ${(noRain || allDry) && noTide ? '' : `<p class="strip-key" aria-hidden="true">${noRain || allDry ? '' : 'Rain <i class="rk light"></i>light <i class="rk moderate"></i>moderate <i class="rk heavy"></i>heavy'}${noRain || allDry || noTide ? '' : ' · '}${noTide ? '' : 'Tide ▲ high ▼ low'}</p>`}`;
 }
 function daySummaryHtml(day) {
   const runs = riskRuns(day.hours);
@@ -542,7 +559,7 @@ function drawChart(hours) {
   }, true);
 }
 $('details').addEventListener('toggle', () => { if ($('details').open && state.spot && state.model) { drawChart(spotHours()); chart?.resize(); } });
-$('radius').addEventListener('change', () => { state.spotKey = ''; render(); renderSpot(); });
+$('radius').addEventListener('change', () => { state.radiusChosen = true; state.spotKey = ''; render(); renderSpot(); });
 
 // ---------------------------------------------- spot search (on the map)
 const KIND_ICON = { favourite: '☆', club: '⚑', place: '⌖', postcode: '✉', coordinates: '⌖', error: 'ⓘ', loading: '…' };
@@ -646,7 +663,7 @@ map.on('click', (e) => {
   }
   if (id === 'sightings' || id === 'overflows') { openInfo(describe(hit.object, id)); return; }
   if (EMBED) return; // the embedded map is for looking; the spot is set by the club
-  setSpot([e.lngLat.lng, e.lngLat.lat], 'click');
+  setSpot([e.lngLat.lng, e.lngLat.lat], 'click', { fly: true });
 });
 
 // ------------------------------------------------------- saved spots
@@ -776,7 +793,7 @@ function renderEmbed(now, days) {
   card.dataset.risk = now.risk;
   const full = new URL(spotUrl({ ...state.spot, name: spotLabel() }, radius()));
   card.innerHTML = `
-    <h3 class="sec-h">Right now <span class="sec-sub">· sewage risk</span></h3>
+    <h3 class="sec-h">Right now <span class="sec-sub">· Sewage risk</span></h3>
     <div class="status-top" data-risk="${now.risk}">
       <div class="light" aria-hidden="true"><span class="lamp high"></span><span class="lamp moderate"></span><span class="lamp low"></span></div>
       <div><p class="spot-name">${esc(spotTitle())} · ± ${radius()} km</p>
@@ -785,15 +802,15 @@ function renderEmbed(now, days) {
     </div>
     <p class="advice">${esc(info.advice)}</p>
     <p class="risk-meaning">${esc(CONFIG.risk.meaning)}</p>
-    <h3 class="sec-h">Next 24 hours <span class="sec-sub">· sewage risk each hour</span></h3>
+    <h3 class="sec-h">Next 24 hours <span class="sec-sub">· Sewage risk each hour</span></h3>
     <div class="strip">${stripHtml(state.spotDay)}</div>
     <ul class="day-sum">${daySummaryHtml(state.spotDay)}</ul>
-    <h3 class="sec-h">Next 7 days <span class="sec-sub">· highest sewage risk each day</span></h3>
+    <h3 class="sec-h">Next 7 days <span class="sec-sub">· Highest sewage risk each day</span></h3>
     <ol class="week" aria-label="Today and the next 7 days">${weekHtml(days)}</ol>
     <p class="small next">${esc(state.nextLine)}</p>
     <p><a href="${esc(full)}" target="_blank" rel="noopener"><b>Open full 7-day forecast ↗</b></a></p>
     <div class="embed-foot"><span>Model estimate, not a water test · updated ${ago(state.dataAt)}</span>
-      <a href="${esc(new URL('live-method.html', location.href))}" target="_blank" rel="noopener">How it works</a></div>`;
+      <a href="${esc(new URL('method.html#live-map', location.href))}" target="_blank" rel="noopener">How it works</a></div>`;
   document.documentElement.style.setProperty('--embed-card-h', `${card.offsetHeight + 16}px`);
   if (EMBED === 'map') map.resize();
 }
@@ -1037,7 +1054,8 @@ drawLegend();
 setLive(true);
 updateButtons();
 renderFavs();
-loadClubs().then(() => { state.clubs = getClubs(); render(); updateStatus(); });
+// The key lists "River club" only when there are clubs to show (clubs.json has been built).
+loadClubs().then(() => { state.clubs = getClubs(); $('keyClub').hidden = !state.clubs.length; render(); updateStatus(); });
 
 // Shared links / alert links / embeds: ?lon=&lat=&r=&name= open the map on that stretch.
 {
@@ -1048,7 +1066,7 @@ loadClubs().then(() => { state.clubs = getClubs(); render(); updateStatus(); });
     setSpot([lon, lat], 'link', { name: Q.get('name')?.slice(0, 40) || null, radius: [1, 3, 5, 10].includes(r) ? r : null });
   } else if (EMBED) {
     $('embedCard').hidden = false;
-    $('embedCard').innerHTML = '<p><b>Thames Spill Map</b></p><p class="small">This embed needs a spot. Open the map, choose your spot and use “Embed on your club\'s website” to get the code.</p>';
+    $('embedCard').innerHTML = `<p><b>${esc(CONFIG.brand.name)}</b></p>` + '<p class="small">This embed needs a spot. Open the map, choose your spot and use “Embed on your club\'s website” to get the code.</p>';
   } else if (state.favs.length) {
     openFav(state.favs[0], 'favourite-auto'); // returning users see their first saved spot straight away
   }

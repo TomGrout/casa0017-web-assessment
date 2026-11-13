@@ -1,7 +1,7 @@
-// Fills methodology.html with live values from CONFIG, so the documentation
-// always matches the settings the map and alert server are using.
+// Fills the "How the Live map forecast works" section of method.html with live values from
+// CONFIG, so the documentation always matches the settings the map and alert server are using.
+// (Styles: method-live.css, loaded by src/pages/method-live.js.)
 import { CONFIG } from '../../../shared/river/config.js';
-import './methodology.css';
 
 const get = (path) => path.split('.').reduce((o, k) => o?.[k], CONFIG);
 

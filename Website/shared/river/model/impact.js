@@ -57,7 +57,7 @@ export class ImpactModel {
   }
 
   /**
-   * @param inp { now, overflows, gauges, highWaters, rain, propensity, members?, trackSourcesHours? }
+   * @param inp { now, overflows, gauges, highWaters, rain, propensity, thresholds?, members?, trackSourcesHours? }
    */
   run(inp) {
     const C = CONFIG, U = C.uncertainty;
@@ -145,7 +145,7 @@ export class ImpactModel {
   }
 
   // -------------------------------------------------------------- sites
-  #prepareSites({ overflows, rain, propensity = {} }) {
+  #prepareSites({ overflows, rain, propensity = {}, thresholds = {} }) {
     const C = CONFIG, F = C.forecast;
     const filt = C.river.receivingWaterFilter.map((s) => s.toLowerCase());
     const hyd = C.hydraulics;
@@ -162,6 +162,8 @@ export class ImpactModel {
       if (Number.isFinite(q)) base = Math.min(1, F.siteBase * (0.5 + q));
       if (s.past48h || s.status === 'discharging') base = Math.min(1, base * F.recentBoost);
       s.base = base;
+      // spill trigger: this overflow's own rainfall threshold (team analysis) or the shared curve
+      s.trigger = this.#triggerFor(thresholds[s.normName ?? ''] ?? thresholds[s.id]);
       // rolling rainfall totals for each forecast hour
       const series = rainFor(rain, s.position);
       s.rainHours = [];
@@ -170,17 +172,37 @@ export class ImpactModel {
         for (let i = 0; i < times.length; i++) {
           if (times[i] <= this.now || times[i] > this.now + C.sim.horizonHours * H) continue;
           let acc = 0;
-          for (let j = Math.max(0, i - F.accumHours + 1); j <= i; j++) acc += r[j] ?? 0;
+          for (let j = Math.max(0, i - s.trigger.windowH + 1); j <= i; j++) acc += r[j] ?? 0;
           s.rainHours.push({ t: times[i], acc });
         }
       }
-      s.forecast = s.rainHours.map(({ t, acc }) => ({ t, p: this.#pSpill(s, acc), rain6h: acc })).filter((f) => f.p > 0);
+      s.forecast = s.rainHours.map(({ t, acc }) => ({ t, p: this.#pSpill(s, acc), rainMm: acc })).filter((f) => f.p > 0);
     }
   }
+  /**
+   * The rain → spill-chance curve for one overflow.
+   * th = { min, avg, n } from the team's rainfall-threshold analysis (24-h rain
+   * before this overflow's past spills), or undefined.
+   *   team:   onset = lowest trigger rain (not below minRainMm), r50 = average trigger rain,
+   *           slope chosen so the chance is onsetShare of the site's maximum at the onset
+   *   shared: CONFIG.forecast.accumHours / r50mm / slopeMm
+   */
+  #triggerFor(th) {
+    const F = CONFIG.forecast, T = F.thresholds;
+    const shared = { source: 'shared', windowH: F.accumHours, r50: F.r50mm, slope: F.slopeMm };
+    if (!T?.enabled || !th) return shared;
+    const min = Number(th.min), avg = Number(th.avg), n = Number(th.n);
+    if (!(n >= T.minSpills) || !Number.isFinite(min) || !Number.isFinite(avg) || !(avg > 0)) return shared;
+    const onset = Math.max(min, F.minRainMm);
+    const r50 = Math.max(avg, onset);
+    const odds = Math.log((1 - T.onsetShare) / T.onsetShare); // logistic = onsetShare this many slopes below r50
+    const slope = Math.min(T.maxSlopeMm, Math.max(T.minSlopeMm, (r50 - onset) / odds));
+    return { source: 'team', windowH: T.windowHours, r50, slope, minMm: min, avgMm: avg, spills: n };
+  }
   #pSpill(site, acc) {
-    const F = CONFIG.forecast;
+    const F = CONFIG.forecast, g = site.trigger;
     if (acc < F.minRainMm) return 0;
-    const p = site.base / (1 + Math.exp(-(acc - F.r50mm) / F.slopeMm));
+    const p = site.base / (1 + Math.exp(-(acc - g.r50) / g.slope));
     return p >= F.minProbability ? p : 0;
   }
 
