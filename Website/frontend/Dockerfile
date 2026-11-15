@@ -1,11 +1,13 @@
 FROM node:22-alpine
 
-WORKDIR /app
+# Build context is Website/ (see docker-compose.yml) so the shared river model is available
+WORKDIR /app/frontend
 
-COPY package*.json ./
+COPY frontend/package*.json ./
 RUN npm install
 
-COPY . .
+COPY frontend/ .
+COPY shared/ /app/shared/
 
 EXPOSE 5173
 

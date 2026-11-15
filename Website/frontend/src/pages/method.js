@@ -1,10 +1,1 @@
-import '../style.css'
-
-// Page: Method & Sources
-
-document.querySelector('#app').innerHTML = `
-  <div>
-    <h1>Method & Sources</h1>
-    <p>Methodology and data sources</p>
-  </div>
-`
+// No JavaScript needed, this page is HTML and CSS only
