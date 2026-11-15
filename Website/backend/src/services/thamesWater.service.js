@@ -139,7 +139,9 @@ export async function fetchDischargeStatus(options = {}) {
       .filter((item) => !filterLondon || isTargetRiver(item.receivingWaterCourse))
       .map(normalizeOutfall);
 
-    if (outfalls.length > 0) {
+    // options.cache === false: read-only (used by the river live map, which asks for every watercourse
+    // and must not add non-London outfalls to the outfalls table)
+    if (outfalls.length > 0 && options.cache !== false) {
       await cacheOutfallStatus(outfalls);
     }
 
